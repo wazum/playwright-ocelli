@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import Ocelli, { qualifyingDiff } from '#src/reporter'
+import Ocelli, { qualifyingDiffs } from '#src/reporter'
 
 const diffAttachment = {
   name: 'price-diff.png',
@@ -253,25 +253,25 @@ test('a rewrite after a kitty image counts the rows the escape claims', () => {
 })
 
 test('a failed comparison carrying a diff attachment qualifies', () => {
-  const qualifying = qualifyingDiff(
+  const qualifying = qualifyingDiffs(
     { expectedStatus: 'passed' },
     { status: 'failed', attachments: [diffAttachment] },
   )
 
-  assert.equal(qualifying, diffAttachment.path)
+  assert.deepEqual(qualifying, [diffAttachment.path])
 })
 
 test('a test.fail() that fails as expected carries a diff but qualifies not', () => {
-  const qualifying = qualifyingDiff(
+  const qualifying = qualifyingDiffs(
     { expectedStatus: 'failed' },
     { status: 'failed', attachments: [diffAttachment] },
   )
 
-  assert.equal(qualifying, null)
+  assert.deepEqual(qualifying, [])
 })
 
 test('a size mismatch produces no diff attachment and so nothing to draw', () => {
-  const qualifying = qualifyingDiff(
+  const qualifying = qualifyingDiffs(
     { expectedStatus: 'passed' },
     {
       status: 'failed',
@@ -279,16 +279,55 @@ test('a size mismatch produces no diff attachment and so nothing to draw', () =>
     },
   )
 
-  assert.equal(qualifying, null)
+  assert.deepEqual(qualifying, [])
+})
+
+test('every diff on one result qualifies, not just the first', () => {
+  const second = { name: 'total-diff.png', path: '/work/total-diff.png' }
+
+  const qualifying = qualifyingDiffs(
+    { expectedStatus: 'passed' },
+    { status: 'failed', attachments: [diffAttachment, second] },
+  )
+
+  assert.deepEqual(qualifying, [diffAttachment.path, second.path])
+})
+
+test('two soft screenshot assertions both reach the terminal', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'kitty',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('price renders', 19, 'test-a')
+  const result = failedWith(FIXTURE)
+  result.attachments.push({
+    name: 'total-diff.png',
+    contentType: 'image/png',
+    path: FIXTURE,
+  })
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  const output = written.join('')
+
+  assert.equal(output.split('px different').length - 1, 2, 'lost a summary')
+  assert.equal(output.split('\x1b_Ga=T').length - 1, 2, 'lost an image')
 })
 
 test('a skipped result never qualifies', () => {
-  const qualifying = qualifyingDiff(
+  const qualifying = qualifyingDiffs(
     { expectedStatus: 'passed' },
     { status: 'skipped', attachments: [diffAttachment] },
   )
 
-  assert.equal(qualifying, null)
+  assert.deepEqual(qualifying, [])
 })
 
 test('a failed screenshot prints its summary under the list line', () => {

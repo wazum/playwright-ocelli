@@ -39,10 +39,12 @@ export default class Ocelli extends ListReporter {
   override onTestEnd(test: TestCase, result: TestResult) {
     super.onTestEnd(test, result)
 
-    const diffPath = qualifyingDiff(test, result)
+    for (const diffPath of qualifyingDiffs(test, result)) {
+      this.#report(diffPath, test)
+    }
+  }
 
-    if (diffPath === null) return
-
+  #report(diffPath: string, test: TestCase) {
     const diff = readFileSync(diffPath)
     const mode = this.#renderMode()
 
@@ -167,18 +169,18 @@ export default class Ocelli extends ListReporter {
   }
 }
 
-export function qualifyingDiff(
+export function qualifyingDiffs(
   test: Pick<TestCase, 'expectedStatus'>,
   result: TestResult,
-) {
-  if (result.status === 'skipped') return null
-  if (result.status === test.expectedStatus) return null
+): string[] {
+  if (result.status === 'skipped') return []
+  if (result.status === test.expectedStatus) return []
 
-  const diff = result.attachments.find(
-    (attachment) => attachment.name.endsWith(DIFF_SUFFIX) && attachment.path,
+  return result.attachments.flatMap((attachment) =>
+    attachment.name.endsWith(DIFF_SUFFIX) && attachment.path
+      ? [attachment.path]
+      : [],
   )
-
-  return diff?.path ?? null
 }
 
 function withPrefix(line: Line, prefix: string): Line {
