@@ -1,0 +1,27 @@
+{
+  "name": "ocelli",
+  "version": "0.0.0",
+  "description": "A Playwright reporter that prints screenshot diffs inside the terminal.",
+  "license": "MIT",
+  "author": "Wolfgang Klinger <wolfgang@wazum.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wazum/playwright-ocelli.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=22.18"
+    }
+  },
+  "scripts": {
+    "test": "node --test 'src/**/*.test.ts'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}
