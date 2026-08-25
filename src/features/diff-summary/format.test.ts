@@ -38,7 +38,7 @@ test('no anti-aliased pixels drops the term instead of printing +0', () => {
   assert.equal(line.emit, '12 px different · 3×4 at 10,20')
 })
 
-test('a missing bounding box drops the region instead of crashing', () => {
+test('an unreadable diff says so instead of claiming zero differences', () => {
   const line = format({
     different: 0,
     antialiased: 0,
@@ -46,7 +46,7 @@ test('a missing bounding box drops the region instead of crashing', () => {
     isWholeFrame: false,
   })
 
-  assert.equal(line.emit, '0 px different')
+  assert.equal(line.emit, 'diff colours not recognised')
 })
 
 test('visibleWidth counts the terminal cells the summary occupies', () => {
