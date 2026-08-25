@@ -4,13 +4,13 @@ import { test } from 'node:test'
 import { analyse } from './analyse.ts'
 
 const oneDigitDiff = readFileSync(
-  new URL('./fixtures/one-digit-diff.png', import.meta.url),
+  new URL('../../fixtures/one-digit-diff.png', import.meta.url),
 )
 const wholeBackgroundDiff = readFileSync(
-  new URL('./fixtures/whole-background-diff.png', import.meta.url),
+  new URL('../../fixtures/whole-background-diff.png', import.meta.url),
 )
 const noMarkedPixels = readFileSync(
-  new URL('./fixtures/no-marked-pixels.png', import.meta.url),
+  new URL('../../fixtures/no-marked-pixels.png', import.meta.url),
 )
 
 test('counts red pixels as different and yellow pixels as anti-aliased', () => {
