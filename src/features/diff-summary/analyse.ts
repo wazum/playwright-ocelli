@@ -1,4 +1,4 @@
-import { PNG } from 'playwright-core/lib/utilsBundle'
+import { PNG } from '../../playwright-internals.ts'
 
 const BYTES_PER_PIXEL = 4
 

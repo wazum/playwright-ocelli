@@ -1,4 +1,4 @@
-import { getEastAsianWidth } from 'playwright-core/lib/utilsBundle'
+import { getEastAsianWidth } from './playwright-internals.ts'
 
 const graphemes = new Intl.Segmenter()
 const NON_PRINTABLE = /[\p{Cc}\p{Cf}]/gu

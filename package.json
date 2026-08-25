@@ -21,6 +21,9 @@
   "scripts": {
     "test": "node --test 'src/**/*.test.ts'"
   },
+  "peerDependencies": {
+    "@playwright/test": ">=1.62.1"
+  },
   "devDependencies": {
     "@playwright/test": "^1.62.1"
   }
