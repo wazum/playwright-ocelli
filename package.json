@@ -19,7 +19,8 @@
     }
   },
   "scripts": {
-    "test": "node --test 'src/**/*.test.ts'"
+    "test": "node --test 'src/**/*.test.ts'",
+    "preview": "node scripts/preview.ts"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.62.1"
