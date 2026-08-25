@@ -3,7 +3,7 @@ import { PNG } from '../../playwright-internals.ts'
 const BYTES_PER_PIXEL = 4
 
 type DecodedImage = { width: number; height: number; data: Buffer }
-type Marking = 'changed' | 'antialiased' | 'none'
+type Marking = 'different' | 'antialiased' | 'none'
 
 export function analyse(diffImage: Buffer) {
   const image: DecodedImage = PNG.sync.read(diffImage)
@@ -21,7 +21,7 @@ export function analyse(diffImage: Buffer) {
 
       if (marking === 'none') continue
 
-      if (marking === 'changed') different++
+      if (marking === 'different') different++
       else antialiased++
 
       firstMarkedColumn = Math.min(firstMarkedColumn, column)
@@ -60,7 +60,7 @@ function markingAt(image: DecodedImage, column: number, row: number): Marking {
   const green = image.data[offset + 1]
   const blue = image.data[offset + 2]
 
-  if (red === 255 && green === 0 && blue === 0) return 'changed'
+  if (red === 255 && green === 0 && blue === 0) return 'different'
   if (red === 255 && green === 255 && blue === 0) return 'antialiased'
 
   return 'none'
