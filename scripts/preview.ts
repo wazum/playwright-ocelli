@@ -35,7 +35,7 @@ const shownPath = truncateStart(relative(process.cwd(), path), MAX_COLUMNS)
 console.log(`${INDENT}${summary.emit}`)
 
 if (useKitty) {
-  process.stdout.write(INDENT + renderKitty(diff, size).escape)
+  process.stdout.write(`${INDENT}${renderKitty(diff, size).escape}\n`)
 } else {
   for (const row of renderBlocks(image, size)) {
     console.log(`${INDENT}${row.emit}`)
