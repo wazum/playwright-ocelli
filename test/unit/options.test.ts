@@ -51,6 +51,24 @@ test('OCELLI_MODE overrides the configured mode for one run', (t) => {
   assert.equal(resolveOptions({ mode: 'off' }).mode, 'kitty')
 })
 
+test('a maxRows that cannot size an image is rejected by name', () => {
+  assert.throws(() => resolveOptions({ maxRows: 'tall' }), /maxRows/)
+  assert.throws(() => resolveOptions({ maxRows: 0 }), /maxRows/)
+  assert.throws(() => resolveOptions({ maxRows: Number.NaN }), /maxRows/)
+})
+
+test('maxImages may be zero but not negative or fractional', () => {
+  assert.equal(resolveOptions({ maxImages: 0 }).maxImages, 0)
+  assert.throws(() => resolveOptions({ maxImages: -1 }), /maxImages/)
+  assert.throws(() => resolveOptions({ maxImages: 1.5 }), /maxImages/)
+})
+
+test('a cellAspect that would divide by zero is rejected by name', () => {
+  assert.throws(() => resolveOptions({ cellAspect: 0 }), /cellAspect/)
+  assert.throws(() => resolveOptions({ cellAspect: -2.1 }), /cellAspect/)
+  assert.equal(resolveOptions({ cellAspect: 1.8 }).cellAspect, 1.8)
+})
+
 test('an unknown mode is rejected, naming it and the valid ones', () => {
   assert.throws(
     () => resolveOptions({ mode: 'kity' }),

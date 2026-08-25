@@ -27,10 +27,34 @@ const DEFAULTS: Options = {
 export function resolveOptions(given: Record<string, unknown>): Options {
   return {
     mode: asMode(process.env.OCELLI_MODE ?? given.mode),
-    maxImages: (given.maxImages as number) ?? DEFAULTS.maxImages,
-    maxRows: (given.maxRows as number) ?? DEFAULTS.maxRows,
-    cellAspect: (given.cellAspect as number) ?? DEFAULTS.cellAspect,
+    maxImages: asWholeNumber(given.maxImages, 'maxImages', 0),
+    maxRows: asWholeNumber(given.maxRows, 'maxRows', 1),
+    cellAspect: asPositiveNumber(given.cellAspect, 'cellAspect'),
   }
+}
+
+function asWholeNumber(value: unknown, name: 'maxImages' | 'maxRows', least: number) {
+  if (value === undefined) return DEFAULTS[name]
+
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < least) {
+    throw new Error(
+      `ocelli: ${name} must be a whole number of at least ${least}, got ${JSON.stringify(value)}.`,
+    )
+  }
+
+  return value
+}
+
+function asPositiveNumber(value: unknown, name: 'cellAspect') {
+  if (value === undefined) return DEFAULTS[name]
+
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new Error(
+      `ocelli: ${name} must be a positive number, got ${JSON.stringify(value)}.`,
+    )
+  }
+
+  return value
 }
 
 export function resolveMode(
