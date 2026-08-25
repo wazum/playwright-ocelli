@@ -14,8 +14,8 @@ import {
 test('the private Playwright bundle resolves through the dependency chain', () => {
   assert.equal(typeof PNG.sync.read, 'function')
   assert.equal(typeof PNG.sync.write, 'function')
-  assert.equal(getEastAsianWidth.eastAsianWidth('価'.codePointAt(0)), 2)
-  assert.equal(getEastAsianWidth.eastAsianWidth('a'.codePointAt(0)), 1)
+  assert.equal(getEastAsianWidth.eastAsianWidth('価'.codePointAt(0) ?? 0), 2)
+  assert.equal(getEastAsianWidth.eastAsianWidth('a'.codePointAt(0) ?? 0), 1)
   assert.equal(typeof ListReporter, 'function')
   assert.ok(
     typeof ListReporter.prototype._updateLineCountAndNewLineFlagForOutput ===

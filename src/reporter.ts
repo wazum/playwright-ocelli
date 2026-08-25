@@ -36,7 +36,7 @@ export default class Ocelli extends ListReporter {
     this.#configDir = String(options.configDir ?? process.cwd())
   }
 
-  onTestEnd(test: TestCase, result: TestResult) {
+  override onTestEnd(test: TestCase, result: TestResult) {
     super.onTestEnd(test, result)
 
     const diffPath = qualifyingDiff(test, result)
@@ -52,7 +52,7 @@ export default class Ocelli extends ListReporter {
     this.#writeLines(this.#destinationsFor(diffPath, test))
   }
 
-  async onEnd(result: unknown) {
+  override async onEnd(result: unknown) {
     await super.onEnd(result)
 
     if (this.#snapshotFailures === 0) return
