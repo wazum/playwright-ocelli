@@ -10,6 +10,7 @@ import { reportLink } from './features/report-link.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
 import type { Options } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
+import type { DecodedImage } from './playwright-internals.ts'
 import { ListReporter, PNG } from './playwright-internals.ts'
 
 type TestCase = { expectedStatus: string; id: string }
@@ -46,11 +47,11 @@ export default class Ocelli extends ListReporter {
 
   #report(diffPath: string, test: TestCase) {
     const diff = readFileSync(diffPath)
-    const mode = this.#renderMode()
+    const image = PNG.sync.read(diff)
 
     this.#snapshotFailures++
-    this.#writeLines([format(analyse(diff))])
-    this.#drawWithinBudget(mode, diff)
+    this.#writeLines([format(analyse(image))])
+    this.#drawWithinBudget(this.#renderMode(), diff, image)
     this.#writeLines(this.#destinationsFor(diffPath, test))
   }
 
@@ -72,7 +73,7 @@ export default class Ocelli extends ListReporter {
     )
   }
 
-  #drawWithinBudget(mode: string, diff: Buffer) {
+  #drawWithinBudget(mode: string, diff: Buffer, image: DecodedImage) {
     if (mode === 'off') return
 
     if (this.#imagesDrawn >= this.#options.maxImages) {
@@ -84,14 +85,16 @@ export default class Ocelli extends ListReporter {
       return
     }
 
-    if (mode === 'blocks') this.#writeLines(this.#blocksFor(diff))
-    if (mode === 'kitty') this.#writeImage(diff)
+    if (mode === 'blocks') {
+      this.#writeLines(renderBlocks(image, this.#sizeFor(image)))
+    }
+
+    if (mode === 'kitty') this.#writeImage(diff, image)
 
     this.#imagesDrawn++
   }
 
-  #writeImage(diff: Buffer) {
-    const image = PNG.sync.read(diff)
+  #writeImage(diff: Buffer, image: DecodedImage) {
     const { escape, rows } = renderKitty(diff, this.#sizeFor(image))
 
     this._maybeWriteNewLine()
@@ -133,12 +136,6 @@ export default class Ocelli extends ListReporter {
       hasColours: this.#hasColours(),
       isCI: Boolean(process.env.CI),
     })
-  }
-
-  #blocksFor(diff: Buffer) {
-    const image = PNG.sync.read(diff)
-
-    return renderBlocks(image, this.#sizeFor(image))
   }
 
   #sizeFor(image: { width: number; height: number }) {

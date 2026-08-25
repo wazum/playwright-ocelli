@@ -21,7 +21,7 @@ const path =
 const diff = readFileSync(path)
 const image = PNG.sync.read(diff)
 
-const summary = format(analyse(diff))
+const summary = format(analyse(image))
 const size = fit({
   imageWidth: image.width,
   imageHeight: image.height,

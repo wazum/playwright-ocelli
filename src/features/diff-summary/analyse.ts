@@ -1,13 +1,10 @@
-import { PNG } from '../../playwright-internals.ts'
+import type { DecodedImage } from '../../playwright-internals.ts'
 
 const BYTES_PER_PIXEL = 4
 
-type DecodedImage = { width: number; height: number; data: Buffer }
 type Marking = 'different' | 'antialiased' | 'none'
 
-export function analyse(diffImage: Buffer) {
-  const image: DecodedImage = PNG.sync.read(diffImage)
-
+export function analyse(image: DecodedImage) {
   let different = 0
   let antialiased = 0
   let firstMarkedColumn = image.width

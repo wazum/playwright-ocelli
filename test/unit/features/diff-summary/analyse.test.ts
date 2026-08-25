@@ -2,16 +2,16 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { analyse } from '#src/features/diff-summary/analyse'
+import { PNG } from '#src/playwright-internals'
 
-const oneDigitDiff = readFileSync(
-  new URL('../../../fixtures/one-digit-diff.png', import.meta.url),
-)
-const wholeBackgroundDiff = readFileSync(
-  new URL('../../../fixtures/whole-background-diff.png', import.meta.url),
-)
-const noMarkedPixels = readFileSync(
-  new URL('../../../fixtures/no-marked-pixels.png', import.meta.url),
-)
+const decode = (name: string) =>
+  PNG.sync.read(
+    readFileSync(new URL(`../../../fixtures/${name}.png`, import.meta.url)),
+  )
+
+const oneDigitDiff = decode('one-digit-diff')
+const wholeBackgroundDiff = decode('whole-background-diff')
+const noMarkedPixels = decode('no-marked-pixels')
 
 test('counts red pixels as different and yellow pixels as anti-aliased', () => {
   const summary = analyse(oneDigitDiff)

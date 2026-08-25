@@ -1,4 +1,5 @@
-type Image = { width: number; height: number; data: Buffer }
+import type { DecodedImage } from '../../playwright-internals.ts'
+
 type Size = { columns: number; rows: number }
 type Colour = [number, number, number]
 
@@ -8,7 +9,7 @@ const SATURATION_RANGE = 256
 const ANTIALIASED_TIER = SATURATION_RANGE
 const DIFFERENT_TIER = SATURATION_RANGE * 2
 
-export function renderBlocks(image: Image, size: Size) {
+export function renderBlocks(image: DecodedImage, size: Size) {
   const lines = []
 
   for (let row = 0; row < size.rows; row++) {
@@ -24,7 +25,7 @@ export function renderBlocks(image: Image, size: Size) {
   return lines
 }
 
-function cellFor(image: Image, size: Size, column: number, row: number) {
+function cellFor(image: DecodedImage, size: Size, column: number, row: number) {
   const left = Math.floor((column * image.width) / size.columns)
   const right = Math.max(
     Math.floor(((column + 1) * image.width) / size.columns),
@@ -46,7 +47,7 @@ function cellFor(image: Image, size: Size, column: number, row: number) {
 }
 
 function severestIn(
-  image: Image,
+  image: DecodedImage,
   left: number,
   right: number,
   top: number,
@@ -85,7 +86,7 @@ function severityOf([red, green, blue]: Colour) {
   return saturation
 }
 
-function pixelAt(image: Image, pixelColumn: number, pixelRow: number): Colour {
+function pixelAt(image: DecodedImage, pixelColumn: number, pixelRow: number): Colour {
   const offset = (pixelRow * image.width + pixelColumn) * 4
 
   return [image.data[offset], image.data[offset + 1], image.data[offset + 2]]
