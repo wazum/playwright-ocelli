@@ -1,7 +1,7 @@
 {
   "name": "ocelli",
-  "version": "0.0.0",
-  "description": "A Playwright reporter that prints screenshot diffs inside the terminal.",
+  "version": "0.1.0",
+  "description": "A Playwright reporter that prints screenshot diffs in your terminal, next to the failure that produced them.",
   "license": "MIT",
   "author": "Wolfgang Klinger <wolfgang@wazum.com>",
   "repository": {
@@ -17,7 +17,10 @@
       "default": "./dist/reporter.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "imports": {
     "#src/*": "./src/*.ts"
   },
