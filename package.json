@@ -20,7 +20,9 @@
   },
   "scripts": {
     "test": "node --test 'src/**/*.test.ts'",
-    "preview": "node scripts/preview.ts"
+    "preview": "node scripts/preview.ts",
+    "demo": "playwright test --config examples/demo/playwright.config.ts",
+    "demo:baseline": "BASELINE=1 playwright test --config examples/demo/playwright.config.ts --update-snapshots"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.62.1"
