@@ -1,22 +1,21 @@
-import type { analyse } from './analyse.ts'
+import type { DiffSummary } from './analyse.ts'
 
-type Summary = ReturnType<typeof analyse>
-
-export function format(summary: Summary) {
-  const { bbox } = summary
-  const parts = [`${summary.different} px different`]
+export function format(summary: DiffSummary) {
+  const terms = [`${summary.different} px different`]
 
   if (summary.antialiased > 0) {
-    parts.push(`+${summary.antialiased} anti-aliased`)
+    terms.push(`+${summary.antialiased} anti-aliased`)
   }
 
-  parts.push(
-    summary.isWholeFrame
-      ? 'whole frame'
-      : `${bbox.width}×${bbox.height} at ${bbox.x},${bbox.y}`,
-  )
+  terms.push(describeRegion(summary))
 
-  const emit = parts.join(' · ')
+  const emit = terms.join(' · ')
 
   return { emit, visibleWidth: emit.length }
+}
+
+function describeRegion({ boundingBox, isWholeFrame }: DiffSummary) {
+  if (isWholeFrame) return 'whole frame'
+
+  return `${boundingBox.width}×${boundingBox.height} at ${boundingBox.x},${boundingBox.y}`
 }

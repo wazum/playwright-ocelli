@@ -20,7 +20,7 @@ test('counts red pixels as different and yellow pixels as anti-aliased', () => {
 test('bounding box spans red and anti-aliased pixels together', () => {
   const summary = analyse(oneDigitDiff)
 
-  assert.deepEqual(summary.bbox, { x: 135, y: 84, width: 21, height: 28 })
+  assert.deepEqual(summary.boundingBox, { x: 135, y: 84, width: 21, height: 28 })
 })
 
 test('a diff filling the image is reported as the whole frame', () => {

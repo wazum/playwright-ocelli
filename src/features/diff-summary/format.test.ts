@@ -6,7 +6,7 @@ test('summary reads as pixel count, anti-aliasing, then bounding box', () => {
   const line = format({
     different: 63,
     antialiased: 77,
-    bbox: { x: 135, y: 84, width: 21, height: 28 },
+    boundingBox: { x: 135, y: 84, width: 21, height: 28 },
     isWholeFrame: false,
   })
 
@@ -20,7 +20,7 @@ test('a frame-filling diff replaces the box with "whole frame"', () => {
   const line = format({
     different: 107492,
     antialiased: 950,
-    bbox: { x: 0, y: 0, width: 480, height: 240 },
+    boundingBox: { x: 0, y: 0, width: 480, height: 240 },
     isWholeFrame: true,
   })
 
@@ -31,7 +31,7 @@ test('no anti-aliased pixels drops the term instead of printing +0', () => {
   const line = format({
     different: 12,
     antialiased: 0,
-    bbox: { x: 10, y: 20, width: 3, height: 4 },
+    boundingBox: { x: 10, y: 20, width: 3, height: 4 },
     isWholeFrame: false,
   })
 
@@ -42,7 +42,7 @@ test('visibleWidth counts the terminal cells the summary occupies', () => {
   const line = format({
     different: 12,
     antialiased: 0,
-    bbox: { x: 10, y: 20, width: 3, height: 4 },
+    boundingBox: { x: 10, y: 20, width: 3, height: 4 },
     isWholeFrame: false,
   })
 
