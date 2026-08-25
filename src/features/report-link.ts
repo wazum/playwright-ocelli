@@ -22,6 +22,11 @@ export function reportLink(
 }
 
 function outputFolder(configDir: string, html: ReporterDescription) {
+  const fromEnvironment =
+    process.env.PLAYWRIGHT_HTML_OUTPUT_DIR ?? process.env.PLAYWRIGHT_HTML_REPORT
+
+  if (fromEnvironment !== undefined) return resolve(fromEnvironment)
+
   const configured = html[1]?.outputFolder
 
   if (configured !== undefined) return resolve(configDir, String(configured))

@@ -20,6 +20,51 @@ test('an outputFolder option resolves against the config directory', () => {
   assert.equal(link, 'file:///work/e2e/out/report/index.html#?testId=abc123')
 })
 
+test('a space and a hash in the folder survive into the URL', () => {
+  const link = reportLink(
+    '/work',
+    [['html', { outputFolder: 'my report #2' }]],
+    'abc123',
+  )
+
+  assert.equal(
+    link,
+    'file:///work/my%20report%20%232/index.html#?testId=abc123',
+  )
+})
+
+test('PLAYWRIGHT_HTML_OUTPUT_DIR wins over the legacy variable and the config', (t) => {
+  process.env.PLAYWRIGHT_HTML_OUTPUT_DIR = '/env/report'
+  process.env.PLAYWRIGHT_HTML_REPORT = '/legacy/report'
+  t.after(() => {
+    delete process.env.PLAYWRIGHT_HTML_OUTPUT_DIR
+    delete process.env.PLAYWRIGHT_HTML_REPORT
+  })
+
+  const link = reportLink(
+    '/work/e2e',
+    [['html', { outputFolder: 'out/report' }]],
+    'abc123',
+  )
+
+  assert.equal(link, 'file:///env/report/index.html#?testId=abc123')
+})
+
+test('the legacy PLAYWRIGHT_HTML_REPORT still overrides the outputFolder', (t) => {
+  process.env.PLAYWRIGHT_HTML_REPORT = '/legacy/report'
+  t.after(() => {
+    delete process.env.PLAYWRIGHT_HTML_REPORT
+  })
+
+  const link = reportLink(
+    '/work/e2e',
+    [['html', { outputFolder: 'out/report' }]],
+    'abc123',
+  )
+
+  assert.equal(link, 'file:///legacy/report/index.html#?testId=abc123')
+})
+
 test('the default folder sits beside the nearest package.json above the config', (t) => {
   const repository = mkdtempSync(join(tmpdir(), 'ocelli-'))
   const configDir = join(repository, 'packages', 'e2e')
