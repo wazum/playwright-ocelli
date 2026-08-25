@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { pathToFileURL } from 'node:url'
 import Ocelli, { qualifyingDiff } from './reporter.ts'
 
 const diffAttachment = {
@@ -74,15 +75,18 @@ function failedWith(path: string) {
   }
 }
 
-function drive(options: Record<string, unknown> = {}) {
+function drive(
+  options: Record<string, unknown> = {},
+  configOverrides: Record<string, unknown> = {},
+) {
   const written: string[] = []
   const reporter = new Ocelli({
     screen: fakeScreen(written),
-    configDir: '/work',
+    configDir: process.cwd(),
     ...options,
   })
 
-  reporter.onConfigure(fakeConfig)
+  reporter.onConfigure({ ...fakeConfig, ...configOverrides })
   reporter.onBegin(fakeSuite)
 
   const price = fakeTest('price renders', 19, 'test-a')
@@ -107,12 +111,12 @@ function passing() {
 
 const CURSOR_UP = /\x1b\[(\d+)A/
 
-test('a rewrite after an image moves up exactly the rows that were printed', () => {
+function driveTwoTests(mode: string) {
   const written: string[] = []
   const reporter = new Ocelli({
     screen: fakeScreen(written),
-    configDir: '/work',
-    mode: 'blocks',
+    configDir: process.cwd(),
+    mode,
   })
 
   reporter.onConfigure(fakeConfig)
@@ -136,13 +140,27 @@ test('a rewrite after an image moves up exactly the rows that were printed', () 
     -1,
   )
   const movedUp = Number(written[rewriteAt].match(CURSOR_UP)?.[1])
-  const newlinesSince = written
-    .slice(afterPaymentBegan, rewriteAt)
-    .join('')
-    .split('\n').length - 1
+  const newlinesSince =
+    written.slice(afterPaymentBegan, rewriteAt).join('').split('\n').length - 1
+  const declaredRows = Number(
+    written.join('').match(/\x1b_Ga=T[^;]*,r=(\d+)/)?.[1] ?? 1,
+  )
 
   assert.ok(rewriteAt > afterPaymentBegan, 'no cursor rewrite was emitted')
+
+  return { movedUp, newlinesSince, declaredRows }
+}
+
+test('a rewrite after block art moves up exactly the rows printed', () => {
+  const { movedUp, newlinesSince } = driveTwoTests('blocks')
+
   assert.equal(movedUp, newlinesSince)
+})
+
+test('a rewrite after a kitty image counts the rows the escape claims', () => {
+  const { movedUp, newlinesSince, declaredRows } = driveTwoTests('kitty')
+
+  assert.equal(movedUp, newlinesSince + declaredRows - 1)
 })
 
 test('a failed comparison carrying a diff attachment qualifies', () => {
@@ -191,6 +209,32 @@ test('a failed screenshot prints its summary under the list line', () => {
     written.includes('63 px different · +77 anti-aliased · 21×28 at 135,84'),
     'the summary line never reached stdout',
   )
+})
+
+test('kitty mode sends an image escape instead of block glyphs', () => {
+  const written = drive({ mode: 'kitty' })
+
+  assert.ok(written.includes('\x1b_Ga=T,f=100,q=2,'), 'no kitty image escape')
+  assert.ok(!written.includes('▀'), 'block glyphs leaked into kitty mode')
+})
+
+test('the diff path is printed as a hyperlink to the file', () => {
+  const written = drive({ mode: 'blocks' })
+
+  assert.ok(
+    written.includes(`\x1b]8;;${pathToFileURL(FIXTURE).href}\x07`),
+    'no hyperlink to the diff file was printed',
+  )
+  assert.ok(written.includes('src/fixtures/one-digit-diff.png'))
+})
+
+test('the report link appears only when html is configured', () => {
+  const withoutHtml = drive({ mode: 'blocks' })
+  const withHtml = drive({ mode: 'blocks' }, { reporter: [['html']] })
+
+  assert.ok(!withoutHtml.includes('\x07report\x1b]8;;'))
+  assert.ok(withHtml.includes('\x07report\x1b]8;;'))
+  assert.ok(withHtml.includes('playwright-report/index.html#?testId=test-a'))
 })
 
 test('a failed screenshot draws the diff below its summary', () => {
