@@ -15,7 +15,8 @@
     ".": {
       "types": "./dist/reporter.d.ts",
       "default": "./dist/reporter.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ocelli/package.json` is resolvable again. `exports` declared only the root
+  entry, so tooling that reads a dependency's manifest got
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+
 ## [0.1.0] - 2026-08-25
 
 First release.
