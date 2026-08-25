@@ -6,6 +6,7 @@ import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import {
   getEastAsianWidth,
+  ListReporter,
   PNG,
   resolveInternals,
 } from './playwright-internals.ts'
@@ -15,6 +16,11 @@ test('the private Playwright bundle resolves through the dependency chain', () =
   assert.equal(typeof PNG.sync.write, 'function')
   assert.equal(getEastAsianWidth.eastAsianWidth('価'.codePointAt(0)), 2)
   assert.equal(getEastAsianWidth.eastAsianWidth('a'.codePointAt(0)), 1)
+  assert.equal(typeof ListReporter, 'function')
+  assert.ok(
+    typeof ListReporter.prototype._updateLineCountAndNewLineFlagForOutput ===
+      'function',
+  )
 })
 
 test('an unreachable Playwright names itself rather than failing bare', (t) => {

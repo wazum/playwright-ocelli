@@ -11,7 +11,10 @@ export function resolveInternals(fromUrl: string) {
       fromPlaywrightTest.resolve('playwright'),
     )
 
-    return fromPlaywright('playwright-core/lib/utilsBundle')
+    return {
+      ...fromPlaywright('playwright-core/lib/utilsBundle'),
+      ListReporter: fromPlaywrightTest('playwright/lib/runner').ListReporter,
+    }
   } catch (cause) {
     throw new Error(
       `ocelli could not reach Playwright's internal modules (@playwright/test ${installedVersion(fromOcelli)}). ocelli resolves them through @playwright/test, which must be installed alongside it.`,
@@ -20,7 +23,8 @@ export function resolveInternals(fromUrl: string) {
   }
 }
 
-export const { PNG, getEastAsianWidth } = resolveInternals(import.meta.url)
+export const { PNG, getEastAsianWidth, ListReporter } =
+  resolveInternals(import.meta.url)
 
 function installedVersion(fromOcelli: NodeJS.Require) {
   try {
