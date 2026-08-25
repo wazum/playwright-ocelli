@@ -13,6 +13,7 @@ mkdir -p "$stage"
 rsync -a --exclude test-results --exclude playwright-report \
   "$repository/src" "$repository/examples" "$repository/package.json" "$stage/"
 cp "$repository/docs/media/record.config.ts" "$stage/playwright.config.ts"
+cp "$repository/docs/media/record-kitty.config.ts" "$stage/kitty.config.ts"
 ln -s "$repository/node_modules" "$stage/node_modules"
 
 cd "$stage" && BASELINE=1 npx playwright test --update-snapshots >/dev/null 2>&1
