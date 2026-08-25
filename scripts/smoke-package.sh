@@ -5,6 +5,10 @@
 # (ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING), so shipping .ts sources as the
 # entry point installs fine and then fails at import. Only a real install
 # proves the package is loadable.
+#
+# The build is left to the prepack lifecycle rather than run here, so this
+# takes the same path npm publish takes. Building first would hide a missing
+# prepack, which is exactly how a tarball with no dist/ got published-shaped.
 set -eu
 
 repository=$(cd "$(dirname "$0")/.." && pwd)
@@ -13,7 +17,6 @@ smoke=$(mktemp -d)
 cleanup() { rm -rf "$smoke"; }
 trap cleanup EXIT
 
-npm --prefix "$repository" run build >/dev/null
 npm --prefix "$repository" pack --pack-destination "$smoke" >/dev/null 2>&1
 
 cd "$smoke"
