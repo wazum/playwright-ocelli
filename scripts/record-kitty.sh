@@ -1,5 +1,8 @@
 #!/bin/sh
-# Records the kitty-mode GIF.
+# Records the kitty-mode still shown in the README.
+#
+# A still, not an animation: the run completes in under a second, so every
+# frame after the draw is the same picture.
 #
 # This cannot be headless. VHS and agg replay escape sequences into a text
 # renderer with no kitty graphics support, so the image would simply be absent.
@@ -14,8 +17,6 @@ set -eu
 
 repository=$(cd "$(dirname "$0")/.." && pwd)
 capture=/tmp/ocelli-kitty.mov
-palette=/tmp/ocelli-palette.png
-draft=/tmp/ocelli-kitty-draft.gif
 probe=/tmp/ocelli-permission-probe.mov
 settle=6
 seconds=16
@@ -49,17 +50,22 @@ if [ ! -s "$capture" ]; then
   exit 1
 fi
 
-ffmpeg -y -i "$capture" \
-  -vf "fps=12,scale=1120:-1:flags=lanczos,palettegen" "$palette" >/dev/null 2>&1
-ffmpeg -y -i "$capture" -i "$palette" \
-  -lavfi "fps=12,scale=1120:-1:flags=lanczos [x]; [x][1:v] paletteuse" \
-  "$draft" >/dev/null 2>&1
+frames=""
 
-for at in 10 50 90; do
-  ffmpeg -y -i "$draft" -vf "select=eq(n\,$at)" -vframes 1 \
-    "/tmp/ocelli-frame-$at.png" >/dev/null 2>&1 || true
+for at in 4 6 8 10 12; do
+  frame="/tmp/ocelli-frame-${at}s.png"
+
+  ffmpeg -y -ss "$at" -i "$capture" -vframes 1 "$frame" >/dev/null 2>&1 || true
+
+  [ -s "$frame" ] && frames="$frames $frame"
 done
 
-echo "draft: $draft"
-echo "frames to inspect: /tmp/ocelli-frame-10.png /tmp/ocelli-frame-50.png /tmp/ocelli-frame-90.png"
-echo "check they show only the terminal, then move the draft to docs/media/kitty.gif"
+if [ -z "$frames" ]; then
+  echo "no frame could be extracted from $capture" >&2
+  exit 1
+fi
+
+echo "capture: $capture"
+echo "frames to inspect:$frames"
+echo "check one shows only the terminal and nothing private, crop it to the"
+echo "terminal window, then save it as docs/media/kitty.png"
