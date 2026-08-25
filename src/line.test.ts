@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { line } from './line.ts'
+import { hyperlink, line } from './line.ts'
 
 test('a wide grapheme takes two terminal cells', () => {
   assert.equal(line('価格').visibleWidth, 4)
@@ -15,4 +15,19 @@ test('control characters are stripped before the text is measured', () => {
 
   assert.equal(measured.emit, 'price.png')
   assert.equal(measured.visibleWidth, 9)
+})
+
+test('a hyperlink wraps its display text in a BEL-terminated OSC 8', () => {
+  const linked = hyperlink('report', 'file:///work/playwright-report/index.html')
+
+  assert.equal(
+    linked.emit,
+    '\x1b]8;;file:///work/playwright-report/index.html\x07report\x1b]8;;\x07',
+  )
+})
+
+test('a hyperlink measures its display text, not its escapes or target', () => {
+  const linked = hyperlink('report', 'file:///work/playwright-report/index.html')
+
+  assert.equal(linked.visibleWidth, 6)
 })
