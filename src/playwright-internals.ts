@@ -41,7 +41,23 @@ type Internals = {
   }
 }
 
+// Every inherited method ocelli calls through to. A move here used to surface
+// only mid-run, on the first failing test.
+const CALLED_THROUGH: (keyof ListReporterSurface)[] = [
+  'onConfigure',
+  'onBegin',
+  'onTestBegin',
+  'onTestEnd',
+  'onEnd',
+]
+
 const REQUIRED_SHAPE: [string, (found: Partial<Internals>) => boolean][] = [
+  ...CALLED_THROUGH.map(
+    (name): [string, (found: Partial<Internals>) => boolean] => [
+      `ListReporter no longer has ${name}, which ocelli calls through to`,
+      (found) => typeof found.ListReporter?.prototype?.[name] === 'function',
+    ],
+  ),
   [
     'playwright/lib/runner no longer exports a ListReporter class',
     (found) => typeof found.ListReporter === 'function',

@@ -49,6 +49,31 @@ test('a renamed private method is named in the error, with the version', () => {
   )
 })
 
+test('a moved lifecycle method is named too, not only the private hooks', () => {
+  class WithoutOnTestEnd {
+    _maybeWriteNewLine() {}
+    _updateLineCountAndNewLineFlagForOutput() {}
+    onConfigure() {}
+    onBegin() {}
+    onTestBegin() {}
+    onEnd() {}
+  }
+
+  assert.throws(
+    () =>
+      verifyInternals(
+        { PNG, getEastAsianWidth, ListReporter: WithoutOnTestEnd },
+        '9.9.9',
+      ),
+    (error: Error) => {
+      assert.match(error.message, /onTestEnd/)
+      assert.doesNotMatch(error.message, /onBegin/)
+
+      return true
+    },
+  )
+})
+
 test('a missing bundle export is named without mentioning the intact ones', () => {
   assert.throws(
     () => verifyInternals({ getEastAsianWidth, ListReporter }, '9.9.9'),
