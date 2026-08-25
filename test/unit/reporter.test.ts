@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import Ocelli, { qualifyingDiffs } from '#src/reporter'
+import Ocelli from '#src/reporter'
 
 const diffAttachment = {
   name: 'price-diff.png',
@@ -264,47 +264,6 @@ test('a rewrite after a kitty image counts the rows the escape claims', () => {
   assert.equal(movedUp, newlinesSince + declaredRows - 1)
 })
 
-test('a failed comparison carrying a diff attachment qualifies', () => {
-  const qualifying = qualifyingDiffs(
-    { expectedStatus: 'passed' },
-    { status: 'failed', attachments: [diffAttachment] },
-  )
-
-  assert.deepEqual(qualifying, [diffAttachment.path])
-})
-
-test('a test.fail() that fails as expected carries a diff but qualifies not', () => {
-  const qualifying = qualifyingDiffs(
-    { expectedStatus: 'failed' },
-    { status: 'failed', attachments: [diffAttachment] },
-  )
-
-  assert.deepEqual(qualifying, [])
-})
-
-test('a size mismatch produces no diff attachment and so nothing to draw', () => {
-  const qualifying = qualifyingDiffs(
-    { expectedStatus: 'passed' },
-    {
-      status: 'failed',
-      attachments: [{ name: 'price-actual.png', path: '/work/price-actual.png' }],
-    },
-  )
-
-  assert.deepEqual(qualifying, [])
-})
-
-test('every diff on one result qualifies, not just the first', () => {
-  const second = { name: 'total-diff.png', path: '/work/total-diff.png' }
-
-  const qualifying = qualifyingDiffs(
-    { expectedStatus: 'passed' },
-    { status: 'failed', attachments: [diffAttachment, second] },
-  )
-
-  assert.deepEqual(qualifying, [diffAttachment.path, second.path])
-})
-
 test('two soft screenshot assertions both reach the terminal', () => {
   const written: string[] = []
   const reporter = new Ocelli({
@@ -331,15 +290,6 @@ test('two soft screenshot assertions both reach the terminal', () => {
 
   assert.equal(output.split('px different').length - 1, 2, 'lost a summary')
   assert.equal(output.split('\x1b_Ga=T').length - 1, 2, 'lost an image')
-})
-
-test('a skipped result never qualifies', () => {
-  const qualifying = qualifyingDiffs(
-    { expectedStatus: 'passed' },
-    { status: 'skipped', attachments: [diffAttachment] },
-  )
-
-  assert.deepEqual(qualifying, [])
 })
 
 test('a failed screenshot prints its summary under the list line', () => {

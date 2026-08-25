@@ -12,13 +12,12 @@ import type { Options } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
 import type { DecodedImage } from './playwright-internals.ts'
 import { ListReporter, PNG, verifyScreen } from './playwright-internals.ts'
+import type { TestResult } from './qualifying-diffs.ts'
+import { qualifyingDiffs } from './qualifying-diffs.ts'
 
 type TestCase = { expectedStatus: string; id: string }
-type Attachment = { name: string; path?: string }
-type TestResult = { status: string; attachments: Attachment[] }
 type Line = { emit: string; visibleWidth: number }
 
-const DIFF_SUFFIX = '-diff.png'
 const INDENT = '       '
 const FALLBACK_COLUMNS = 80
 const SEPARATOR = line(' · ')
@@ -165,20 +164,6 @@ export default class Ocelli extends ListReporter {
       this.screen.stdout.write(`${line.emit}\n`)
     }
   }
-}
-
-export function qualifyingDiffs(
-  test: Pick<TestCase, 'expectedStatus'>,
-  result: TestResult,
-): string[] {
-  if (result.status === 'skipped') return []
-  if (result.status === test.expectedStatus) return []
-
-  return result.attachments.flatMap((attachment) =>
-    attachment.name.endsWith(DIFF_SUFFIX) && attachment.path
-      ? [attachment.path]
-      : [],
-  )
 }
 
 function withPrefix(line: Line, prefix: string): Line {
