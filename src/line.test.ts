@@ -35,13 +35,13 @@ test('a hyperlink measures its display text, not its escapes or target', () => {
 test('text wider than the budget keeps its tail behind a leading ellipsis', () => {
   const truncated = truncateStart('tests/checkout/price-diff.png', 20)
 
-  assert.equal(truncated, '…kout/price-diff.png')
-  assert.equal(line(truncated).visibleWidth, 20)
+  assert.equal(truncated.emit, '…kout/price-diff.png')
+  assert.equal(truncated.visibleWidth, 20)
 })
 
 test('truncation drops a wide grapheme rather than overflow the budget', () => {
   const truncated = truncateStart('aaa価格', 4)
 
-  assert.equal(truncated, '…格')
-  assert.equal(line(truncated).visibleWidth, 3)
+  assert.equal(truncated.emit, '…格')
+  assert.equal(truncated.visibleWidth, 3)
 })

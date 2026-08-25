@@ -19,9 +19,10 @@ export function hyperlink(displayText: string, target: string) {
 }
 
 export function truncateStart(displayText: string, maxCells: number) {
-  const { emit, visibleWidth } = line(displayText)
+  const measured = line(displayText)
+  const { emit, visibleWidth } = measured
 
-  if (visibleWidth <= maxCells) return emit
+  if (visibleWidth <= maxCells) return measured
 
   const budgetForTail = maxCells - widthOf(ELLIPSIS)
   const tail = []
@@ -34,7 +35,7 @@ export function truncateStart(displayText: string, maxCells: number) {
     cells += widthOf(segment)
   }
 
-  return ELLIPSIS + tail.join('')
+  return line(ELLIPSIS + tail.join(''))
 }
 
 function measureWidth(text: string) {
