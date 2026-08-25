@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { fit } from '../src/features/diff-image/fit.ts'
 import { renderBlocks } from '../src/features/diff-image/render-blocks.ts'
+import { renderKitty } from '../src/features/diff-image/render-kitty.ts'
 import { analyse } from '../src/features/diff-summary/analyse.ts'
 import { format } from '../src/features/diff-summary/format.ts'
 import { reportLink } from '../src/features/report-link.ts'
@@ -13,7 +14,10 @@ const MAX_COLUMNS = 72
 const MAX_ROWS = 16
 const CELL_ASPECT = 2.1
 
-const path = process.argv[2] ?? 'src/fixtures/one-digit-diff.png'
+const useKitty = process.argv.includes('--kitty')
+const path =
+  process.argv.slice(2).find((argument) => !argument.startsWith('--')) ??
+  'src/fixtures/one-digit-diff.png'
 const diff = readFileSync(path)
 const image = PNG.sync.read(diff)
 
@@ -30,8 +34,12 @@ const shownPath = truncateStart(relative(process.cwd(), path), MAX_COLUMNS)
 
 console.log(`${INDENT}${summary.emit}`)
 
-for (const row of renderBlocks(image, size)) {
-  console.log(`${INDENT}${row.emit}`)
+if (useKitty) {
+  process.stdout.write(INDENT + renderKitty(diff, size).escape)
+} else {
+  for (const row of renderBlocks(image, size)) {
+    console.log(`${INDENT}${row.emit}`)
+  }
 }
 
 console.log(
