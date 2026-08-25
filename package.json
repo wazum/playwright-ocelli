@@ -19,6 +19,7 @@
     }
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "node --test 'src/**/*.test.ts'",
     "preview": "node scripts/preview.ts",
     "demo": "playwright test --config examples/demo/playwright.config.ts",
@@ -28,6 +29,8 @@
     "@playwright/test": ">=1.62.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.3.0",
+    "typescript": "^7.0.2"
   }
 }

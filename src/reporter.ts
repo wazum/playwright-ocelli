@@ -167,7 +167,10 @@ export default class Ocelli extends ListReporter {
   }
 }
 
-export function qualifyingDiff(test: TestCase, result: TestResult) {
+export function qualifyingDiff(
+  test: Pick<TestCase, 'expectedStatus'>,
+  result: TestResult,
+) {
   if (result.status === 'skipped') return null
   if (result.status === test.expectedStatus) return null
 
