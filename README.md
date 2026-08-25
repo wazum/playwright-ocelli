@@ -39,6 +39,8 @@ output is the worst way a reporter can fail. So the real thing is opt-in:
 reporter: [['ocelli', { mode: 'kitty' }]]
 ```
 
+![the same failure rendered as a real image in kitty mode](docs/media/kitty.png)
+
 That needs a terminal implementing the kitty graphics protocol. `OCELLI_MODE=kitty`
 switches a single run without touching the config.
 
