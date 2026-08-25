@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { hyperlink, line } from './line.ts'
+import { hyperlink, line, truncateStart } from './line.ts'
 
 test('a wide grapheme takes two terminal cells', () => {
   assert.equal(line('価格').visibleWidth, 4)
@@ -30,4 +30,18 @@ test('a hyperlink measures its display text, not its escapes or target', () => {
   const linked = hyperlink('report', 'file:///work/playwright-report/index.html')
 
   assert.equal(linked.visibleWidth, 6)
+})
+
+test('text wider than the budget keeps its tail behind a leading ellipsis', () => {
+  const truncated = truncateStart('tests/checkout/price-diff.png', 20)
+
+  assert.equal(truncated, '…kout/price-diff.png')
+  assert.equal(line(truncated).visibleWidth, 20)
+})
+
+test('truncation drops a wide grapheme rather than overflow the budget', () => {
+  const truncated = truncateStart('aaa価格', 4)
+
+  assert.equal(truncated, '…格')
+  assert.equal(line(truncated).visibleWidth, 3)
 })
