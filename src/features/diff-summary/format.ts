@@ -7,7 +7,11 @@ export function format(summary: DiffSummary) {
     terms.push(`+${summary.antialiased} anti-aliased`)
   }
 
-  terms.push(describeRegion(summary))
+  const region = describeRegion(summary)
+
+  if (region !== null) {
+    terms.push(region)
+  }
 
   const emit = terms.join(' · ')
 
@@ -15,6 +19,7 @@ export function format(summary: DiffSummary) {
 }
 
 function describeRegion({ boundingBox, isWholeFrame }: DiffSummary) {
+  if (boundingBox === null) return null
   if (isWholeFrame) return 'whole frame'
 
   return `${boundingBox.width}×${boundingBox.height} at ${boundingBox.x},${boundingBox.y}`

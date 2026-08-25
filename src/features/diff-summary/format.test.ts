@@ -38,6 +38,17 @@ test('no anti-aliased pixels drops the term instead of printing +0', () => {
   assert.equal(line.emit, '12 px different · 3×4 at 10,20')
 })
 
+test('a missing bounding box drops the region instead of crashing', () => {
+  const line = format({
+    different: 0,
+    antialiased: 0,
+    boundingBox: null,
+    isWholeFrame: false,
+  })
+
+  assert.equal(line.emit, '0 px different')
+})
+
 test('visibleWidth counts the terminal cells the summary occupies', () => {
   const line = format({
     different: 12,
