@@ -31,19 +31,24 @@ export function analyse(diffImage: Buffer) {
     }
   }
 
-  const boundingBox = {
-    x: firstMarkedColumn,
-    y: firstMarkedRow,
-    width: lastMarkedColumn - firstMarkedColumn + 1,
-    height: lastMarkedRow - firstMarkedRow + 1,
-  }
+  const nothingMarked = lastMarkedRow === -1
+  const boundingBox = nothingMarked
+    ? null
+    : {
+        x: firstMarkedColumn,
+        y: firstMarkedRow,
+        width: lastMarkedColumn - firstMarkedColumn + 1,
+        height: lastMarkedRow - firstMarkedRow + 1,
+      }
 
   return {
     different,
     antialiased,
     boundingBox,
     isWholeFrame:
-      boundingBox.width === image.width && boundingBox.height === image.height,
+      boundingBox !== null &&
+      boundingBox.width === image.width &&
+      boundingBox.height === image.height,
   }
 }
 

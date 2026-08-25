@@ -9,6 +9,9 @@ const oneDigitDiff = readFileSync(
 const wholeBackgroundDiff = readFileSync(
   new URL('./fixtures/whole-background-diff.png', import.meta.url),
 )
+const noMarkedPixels = readFileSync(
+  new URL('./fixtures/no-marked-pixels.png', import.meta.url),
+)
 
 test('counts red pixels as different and yellow pixels as anti-aliased', () => {
   const summary = analyse(oneDigitDiff)
@@ -21,6 +24,12 @@ test('bounding box spans red and anti-aliased pixels together', () => {
   const summary = analyse(oneDigitDiff)
 
   assert.deepEqual(summary.boundingBox, { x: 135, y: 84, width: 21, height: 28 })
+})
+
+test('an image with nothing marked has no bounding box', () => {
+  const summary = analyse(noMarkedPixels)
+
+  assert.equal(summary.boundingBox, null)
 })
 
 test('a diff filling the image is reported as the whole frame', () => {
