@@ -98,6 +98,67 @@ function drive(
   return written.join('')
 }
 
+function driveFailures(count: number, options: Record<string, unknown> = {}) {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    ...options,
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  for (let index = 0; index < count; index++) {
+    const failing = fakeTest(`case ${index}`, 19 + index, `test-${index}`)
+    const result = failedWith(FIXTURE)
+
+    reporter.onTestBegin(failing, result)
+    reporter.onTestEnd(failing, result)
+  }
+
+  return written.join('')
+}
+
+test('the image budget stops later images and says so once', () => {
+  const written = driveFailures(3, { mode: 'kitty', maxImages: 1 })
+
+  assert.equal(written.split('\x1b_Ga=T').length - 1, 1, 'drew too many images')
+  assert.equal(written.split('maxImages').length - 1, 1, 'notice not printed once')
+  assert.equal(written.split('px different').length - 1, 3, 'lost a summary')
+})
+
+test('a run with snapshot failures ends by saying how to accept them', async () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'off',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  for (const index of [0, 1]) {
+    const failing = fakeTest(`case ${index}`, 19 + index, `test-${index}`)
+    const result = failedWith(FIXTURE)
+
+    reporter.onTestBegin(failing, result)
+    reporter.onTestEnd(failing, result)
+  }
+
+  await reporter.onEnd({ status: 'failed' })
+
+  assert.ok(
+    written
+      .join('')
+      .includes(
+        '2 snapshots differ · accept with: npx playwright test --update-snapshots',
+      ),
+    'no acceptance hint at the end of the run',
+  )
+})
+
 function passing() {
   return {
     status: 'passed',

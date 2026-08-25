@@ -21,10 +21,14 @@ const DIFF_SUFFIX = '-diff.png'
 const INDENT = '       '
 const FALLBACK_COLUMNS = 80
 const SEPARATOR = line(' · ')
+const BUDGET_SPENT = 'maxImages reached · later diffs are summarised only'
 
 export default class Ocelli extends ListReporter {
   #options: Options
   #configDir: string
+  #imagesDrawn = 0
+  #budgetAnnounced = false
+  #snapshotFailures = 0
 
   constructor(options: Record<string, unknown> = {}) {
     super(options)
@@ -42,12 +46,46 @@ export default class Ocelli extends ListReporter {
     const diff = readFileSync(diffPath)
     const mode = this.#renderMode()
 
+    this.#snapshotFailures++
     this.#writeLines([format(analyse(diff))])
+    this.#drawWithinBudget(mode, diff)
+    this.#writeLines([this.#destinationsFor(diffPath, test)])
+  }
+
+  async onEnd(result: unknown) {
+    await super.onEnd(result)
+
+    if (this.#snapshotFailures === 0) return
+
+    const differ =
+      this.#snapshotFailures === 1 ? 'snapshot differs' : 'snapshots differ'
+
+    this.#writeLines(
+      [
+        line(
+          `${this.#snapshotFailures} ${differ} · accept with: npx playwright test --update-snapshots`,
+        ),
+      ],
+      '',
+    )
+  }
+
+  #drawWithinBudget(mode: string, diff: Buffer) {
+    if (mode === 'off') return
+
+    if (this.#imagesDrawn >= this.#options.maxImages) {
+      if (this.#budgetAnnounced) return
+
+      this.#budgetAnnounced = true
+      this.#writeLines([line(BUDGET_SPENT)])
+
+      return
+    }
 
     if (mode === 'blocks') this.#writeLines(this.#blocksFor(diff))
     if (mode === 'kitty') this.#writeImage(diff)
 
-    this.#writeLines([this.#destinationsFor(diffPath, test)])
+    this.#imagesDrawn++
   }
 
   #writeImage(diff: Buffer) {
@@ -106,8 +144,8 @@ export default class Ocelli extends ListReporter {
     return width - INDENT.length
   }
 
-  #writeLines(lines: Line[]) {
-    const indented = lines.map(indent)
+  #writeLines(lines: Line[], prefix = INDENT) {
+    const indented = lines.map((line) => withPrefix(line, prefix))
 
     this._maybeWriteNewLine()
     this._updateLineCountAndNewLineFlagForOutput(accountingFor(indented))
@@ -129,10 +167,10 @@ export function qualifyingDiff(test: TestCase, result: TestResult) {
   return diff?.path ?? null
 }
 
-function indent(line: Line): Line {
+function withPrefix(line: Line, prefix: string): Line {
   return {
-    emit: INDENT + line.emit,
-    visibleWidth: INDENT.length + line.visibleWidth,
+    emit: prefix + line.emit,
+    visibleWidth: prefix.length + line.visibleWidth,
   }
 }
 

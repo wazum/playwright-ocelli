@@ -49,6 +49,7 @@ switches a single run without touching the config.
 | option | default | meaning |
 |---|---|---|
 | `mode` | `'auto'` | `'auto'` \| `'blocks'` \| `'kitty'` \| `'off'` |
+| `maxImages` | `5` | images per run, then summaries only |
 | `maxRows` | `16` | height budget per image |
 | `cellAspect` | `2.1` | cell height ÷ width |
 
