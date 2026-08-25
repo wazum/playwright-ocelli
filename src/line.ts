@@ -3,10 +3,12 @@ import { getEastAsianWidth } from './playwright-internals.ts'
 const graphemes = new Intl.Segmenter()
 
 // Controls, plus the format characters that reorder or hide text. Deliberately
-// not all of \p{Cf}: that class also holds the joiners emoji are built from,
-// and stripping those rewrites a joined family into four separate people.
+// not all of \p{Cf}: that class also holds the joiners and tags emoji are built
+// from, and stripping those rewrites a joined family into four separate people
+// and flattens a subdivision flag.
 const NON_PRINTABLE = new RegExp(
-  '[\\p{Cc}\\u200b\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff]',
+  '[\\p{Cc}\\u00ad\\u061c\\u180e\\u200b\\u200e\\u200f\\u202a-\\u202e' +
+    '\\u2060-\\u2064\\u2066-\\u206f\\ufeff\\ufff9-\\ufffb]',
   'gu',
 )
 
