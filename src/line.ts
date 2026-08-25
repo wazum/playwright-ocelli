@@ -1,7 +1,22 @@
 import { getEastAsianWidth } from './playwright-internals.ts'
 
 const graphemes = new Intl.Segmenter()
-const NON_PRINTABLE = /[\p{Cc}\p{Cf}]/gu
+
+// Controls, plus the format characters that reorder or hide text. Deliberately
+// not all of \p{Cf}: that class also holds the joiners emoji are built from,
+// and stripping those rewrites a joined family into four separate people.
+const NON_PRINTABLE = new RegExp(
+  '[\\p{Cc}\\u200b\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff]',
+  'gu',
+)
+
+// A terminal gives an emoji two cells, and draws a flag's two regional
+// indicators as one glyph. East Asian width alone calls both of them narrow.
+const TWO_CELLS = new RegExp(
+  '\\p{Emoji_Presentation}|\\ufe0f|[\\u{1f1e6}-\\u{1f1ff}]',
+  'u',
+)
+
 const OSC8 = '\x1b]8;;'
 const BEL = '\x07'
 const ELLIPSIS = '…'
@@ -49,5 +64,7 @@ function measureWidth(text: string) {
 }
 
 function widthOf(grapheme: string) {
+  if (TWO_CELLS.test(grapheme)) return 2
+
   return getEastAsianWidth.eastAsianWidth(grapheme.codePointAt(0)!)
 }

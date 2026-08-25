@@ -17,6 +17,29 @@ test('control characters are stripped before the text is measured', () => {
   assert.equal(measured.visibleWidth, 9)
 })
 
+test('a joined emoji survives whole instead of splitting into its parts', () => {
+  const measured = line('👨‍👩‍👧‍👦.png')
+
+  assert.equal(measured.emit, '👨‍👩‍👧‍👦.png')
+  assert.equal(measured.visibleWidth, 6)
+})
+
+test('a flag takes the two cells a terminal gives it', () => {
+  assert.equal(line('🇦🇹').visibleWidth, 2)
+})
+
+test('emoji presentation decides the width, not the character alone', () => {
+  assert.equal(line('©').visibleWidth, 1)
+  assert.equal(line('©️').visibleWidth, 2)
+})
+
+test('bidi overrides are stripped, they can reorder a printed path', () => {
+  const measured = line('pri‮ce​.png')
+
+  assert.equal(measured.emit, 'price.png')
+  assert.equal(measured.visibleWidth, 9)
+})
+
 test('a hyperlink wraps its display text in a BEL-terminated OSC 8', () => {
   const linked = hyperlink('report', 'file:///work/playwright-report/index.html')
 
