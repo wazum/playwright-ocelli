@@ -1,5 +1,12 @@
 # ocelli
 
+[![CI](https://github.com/wazum/playwright-ocelli/actions/workflows/ci.yml/badge.svg)](https://github.com/wazum/playwright-ocelli/actions/workflows/ci.yml)
+[![node](https://img.shields.io/badge/node-20.19%2B-5FA04E)](#requirements)
+[![playwright](https://img.shields.io/badge/playwright-1.62.1%2B-2EAD33)](#requirements)
+[![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#requirements)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![status](https://img.shields.io/badge/status-pre--release-orange)
+
 A Playwright reporter that prints screenshot diffs in your terminal, next to the
 failure that produced them.
 
@@ -13,9 +20,33 @@ open the report when it is worth opening.
 It replaces the `list` reporter: everything `list` prints, plus the diff image, a
 one-line numeric summary, and a link into the report.
 
-> Pre-release. Not published to npm yet.
+## What it prints
+
+Under each failing test, indented to line up with Playwright's own output:
+
+```
+  ✘  2 checkout.spec.ts:19:1 › discounted price renders (192ms)
+       63 px different · +77 anti-aliased · 21×28 at 135,84
+       test-results/checkout/discount-diff.png · report
+```
+
+The diff image is drawn between those two lines, as in the recording above. Both
+destinations are hyperlinks: the path opens the image, `report` opens that test
+in the HTML report.
+
+The numbers sit above the image on purpose. Playwright paints real differences
+red and anti-aliasing yellow, and ocelli counts them apart — so the summary stays
+reliable even when downscaling hides a small diff.
+
+At the end of a run:
+
+```
+2 snapshots differ · accept with: npx playwright test --update-snapshots
+```
 
 ## Install
+
+> Not on npm yet — the name is unclaimed.
 
 ```
 npm install -D ocelli
@@ -26,6 +57,12 @@ npm install -D ocelli
 export default defineConfig({
   reporter: 'ocelli',
 })
+```
+
+With options:
+
+```js
+reporter: [['ocelli', { maxImages: 3, maxRows: 20 }]]
 ```
 
 ## Real images: `mode: 'kitty'`
@@ -58,6 +95,10 @@ switches a single run without touching the config.
 drawn, so a pipe also needs `FORCE_COLOR=1` or `PLAYWRIGHT_FORCE_TTY=100x40`.
 Without colours you still get the summary and both destinations as plain text.
 
+`OCELLI_MODE` overrides `mode` for one run. Numeric options are validated at
+startup: a `maxRows` of `0` or `"tall"` is a configuration error, not a silently
+strange picture.
+
 ## Known limitations
 
 - **kitty hands downscaling to the terminal.** On a full-page screenshot a small
@@ -69,8 +110,8 @@ Without colours you still get the summary and both destinations as plain text.
 
 ## Requirements
 
-Node 20.19+, `@playwright/test` >=1.62.1 <2 as a peer dependency. Zero runtime
-dependencies.
+Node 20.19+, `@playwright/test` `>=1.62.1 <2` as a peer dependency. Zero runtime
+dependencies. Both floors are exercised in CI on every push, not just declared.
 
 ### It reaches into Playwright's private modules
 
@@ -79,14 +120,13 @@ width table, and ocelli extends and uses all three. So it imports
 `playwright/lib/runner` and `playwright-core/lib/utilsBundle` — internal paths,
 covered by no compatibility promise.
 
-Two things follow. A Playwright upgrade can break ocelli within a minor version,
-so ocelli checks that surface on startup and, if it has moved, says which part
-moved and which Playwright version it was reading, instead of failing somewhere
-in the middle of a run. And a weekly canary run tests ocelli against whatever
-Playwright published last, so a break tends to be known before you meet it.
+So a Playwright upgrade can break ocelli within a minor version. Two things
+guard against meeting that in a test run: ocelli checks the surface on startup
+and names the part that moved, and a weekly canary run tests against whatever
+Playwright published last.
 
-Nothing here is patched or monkey-patched: ocelli subclasses the reporter and
-calls it. It has no effect on how your tests run.
+Nothing is patched or monkey-patched — ocelli subclasses the reporter and calls
+it, with no effect on how your tests run.
 
 ## Licence
 
