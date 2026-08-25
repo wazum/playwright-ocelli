@@ -20,7 +20,9 @@ function fakeScreen(written: string[]) {
       {},
       {
         get: (_target, key) =>
-          key === 'enabled' ? true : (text: string) => text,
+          key === 'enabled'
+            ? true
+            : (text: string) => `\x1b[2m${text}\x1b[22m`,
       },
     ),
     stdout: {
@@ -92,6 +94,57 @@ function drive(options: Record<string, unknown> = {}) {
   return written.join('')
 }
 
+function passing() {
+  return {
+    status: 'passed',
+    retry: 0,
+    duration: 12,
+    errors: [],
+    steps: [],
+    attachments: [],
+  }
+}
+
+const CURSOR_UP = /\x1b\[(\d+)A/
+
+test('a rewrite after an image moves up exactly the rows that were printed', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: '/work',
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const price = fakeTest('price renders', 19, 'test-a')
+  const payment = fakeTest('payment renders', 23, 'test-b')
+  const failure = failedWith(FIXTURE)
+  const success = passing()
+
+  reporter.onTestBegin(price, failure)
+  reporter.onTestBegin(payment, success)
+
+  const afterPaymentBegan = written.length - 1
+
+  reporter.onTestEnd(price, failure)
+  reporter.onTestEnd(payment, success)
+
+  const rewriteAt = written.reduce(
+    (last, chunk, index) => (CURSOR_UP.test(chunk) ? index : last),
+    -1,
+  )
+  const movedUp = Number(written[rewriteAt].match(CURSOR_UP)?.[1])
+  const newlinesSince = written
+    .slice(afterPaymentBegan, rewriteAt)
+    .join('')
+    .split('\n').length - 1
+
+  assert.ok(rewriteAt > afterPaymentBegan, 'no cursor rewrite was emitted')
+  assert.equal(movedUp, newlinesSince)
+})
+
 test('a failed comparison carrying a diff attachment qualifies', () => {
   const qualifying = qualifyingDiff(
     { expectedStatus: 'passed' },
@@ -137,5 +190,14 @@ test('a failed screenshot prints its summary under the list line', () => {
   assert.ok(
     written.includes('63 px different · +77 anti-aliased · 21×28 at 135,84'),
     'the summary line never reached stdout',
+  )
+})
+
+test('a failed screenshot draws the diff below its summary', () => {
+  const written = drive({ mode: 'blocks' })
+
+  assert.ok(
+    written.includes('38;2;255;0;0'),
+    'no red diff pixel reached the terminal',
   )
 })
