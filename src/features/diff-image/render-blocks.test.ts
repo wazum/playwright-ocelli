@@ -35,6 +35,12 @@ test('a cell only one pixel tall paints that pixel in both halves', () => {
   assert.equal(lines[0].emit, '\x1b[38;2;255;0;0;48;2;255;0;0m▀\x1b[0m')
 })
 
+test('more rows than the image is tall never fabricates a black cell', () => {
+  const lines = renderBlocks(image(1, 2, [RED, BLUE]), { columns: 1, rows: 3 })
+
+  assert.equal(lines[0].emit, '\x1b[38;2;255;0;0;48;2;255;0;0m▀\x1b[0m')
+})
+
 test('a cell narrower than one pixel still samples that pixel', () => {
   const lines = renderBlocks(image(1, 2, [RED, BLUE]), { columns: 2, rows: 1 })
 

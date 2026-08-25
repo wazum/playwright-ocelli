@@ -31,7 +31,10 @@ function cellFor(image: Image, size: Size, column: number, row: number) {
     left + 1,
   )
   const top = Math.floor((row * image.height) / size.rows)
-  const bottom = Math.floor(((row + 1) * image.height) / size.rows)
+  const bottom = Math.max(
+    Math.floor(((row + 1) * image.height) / size.rows),
+    top + 1,
+  )
   const middle = Math.floor((top + bottom) / 2)
   const upperEnd = Math.max(middle, top + 1)
   const lowerStart = Math.min(middle, bottom - 1)
