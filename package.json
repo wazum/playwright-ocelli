@@ -9,6 +9,15 @@
     "url": "git+https://github.com/wazum/playwright-ocelli.git"
   },
   "type": "module",
+  "main": "./dist/reporter.js",
+  "types": "./dist/reporter.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/reporter.d.ts",
+      "default": "./dist/reporter.js"
+    }
+  },
+  "files": ["dist", "src"],
   "imports": {
     "#src/*": "./src/*.ts"
   },
@@ -23,6 +32,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "node --test 'test/unit/**/*.test.ts'",
     "preview": "node scripts/preview.ts",
     "demo": "playwright test --config examples/demo/playwright.config.ts",
