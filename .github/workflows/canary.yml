@@ -1,0 +1,30 @@
+# ocelli reads Playwright's private modules. CI pins the floor version through
+# the lockfile; this run takes whatever Playwright published last, so a move in
+# those modules surfaces here instead of in someone's terminal.
+name: Canary
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  latest-playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save @playwright/test@latest
+      - name: Report the version under test
+        run: node -p "require('@playwright/test/package.json').version"
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: ./scripts/smoke-package.sh

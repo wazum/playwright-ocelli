@@ -69,8 +69,24 @@ Without colours you still get the summary and both destinations as plain text.
 
 ## Requirements
 
-Node 20.19+, `@playwright/test` 1.62+ as a peer dependency. Zero runtime
+Node 20.19+, `@playwright/test` >=1.62.1 <2 as a peer dependency. Zero runtime
 dependencies.
+
+### It reaches into Playwright's private modules
+
+Playwright does not export the `list` reporter, a PNG decoder or an East Asian
+width table, and ocelli extends and uses all three. So it imports
+`playwright/lib/runner` and `playwright-core/lib/utilsBundle` — internal paths,
+covered by no compatibility promise.
+
+Two things follow. A Playwright upgrade can break ocelli within a minor version,
+so ocelli checks that surface on startup and, if it has moved, says which part
+moved and which Playwright version it was reading, instead of failing somewhere
+in the middle of a run. And a weekly canary run tests ocelli against whatever
+Playwright published last, so a break tends to be known before you meet it.
+
+Nothing here is patched or monkey-patched: ocelli subclasses the reporter and
+calls it. It has no effect on how your tests run.
 
 ## Licence
 

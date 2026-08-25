@@ -11,7 +11,7 @@ import { hyperlink, line, truncateStart } from './line.ts'
 import type { Options } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
 import type { DecodedImage } from './playwright-internals.ts'
-import { ListReporter, PNG } from './playwright-internals.ts'
+import { ListReporter, PNG, verifyScreen } from './playwright-internals.ts'
 
 type TestCase = { expectedStatus: string; id: string }
 type Attachment = { name: string; path?: string }
@@ -33,6 +33,7 @@ export default class Ocelli extends ListReporter {
 
   constructor(options: Record<string, unknown> = {}) {
     super(options)
+    verifyScreen(this.screen)
     this.#options = resolveOptions(options)
     this.#configDir = String(options.configDir ?? process.cwd())
   }

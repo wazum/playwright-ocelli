@@ -35,11 +35,38 @@ type Internals = {
     }
   }
   getEastAsianWidth: { eastAsianWidth(codePoint: number): number }
-  ListReporter: new (options?: Record<string, unknown>) => ListReporterSurface
+  ListReporter: {
+    new (options?: Record<string, unknown>): ListReporterSurface
+    prototype: ListReporterSurface
+  }
 }
+
+const REQUIRED_SHAPE: [string, (found: Partial<Internals>) => boolean][] = [
+  [
+    'playwright/lib/runner no longer exports a ListReporter class',
+    (found) => typeof found.ListReporter === 'function',
+  ],
+  [
+    'ListReporter no longer has _maybeWriteNewLine and _updateLineCountAndNewLineFlagForOutput, which ocelli calls to keep the terminal line count right',
+    (found) =>
+      typeof found.ListReporter?.prototype?._maybeWriteNewLine === 'function' &&
+      typeof found.ListReporter?.prototype
+        ?._updateLineCountAndNewLineFlagForOutput === 'function',
+  ],
+  [
+    'playwright-core/lib/utilsBundle no longer exports PNG, which ocelli uses to decode diff images',
+    (found) => typeof found.PNG?.sync?.read === 'function',
+  ],
+  [
+    'playwright-core/lib/utilsBundle no longer exports getEastAsianWidth, which ocelli uses to measure how wide a line prints',
+    (found) => typeof found.getEastAsianWidth?.eastAsianWidth === 'function',
+  ],
+]
 
 export function resolveInternals(fromUrl: string): Internals {
   const fromOcelli = createRequire(fromUrl)
+  const version = installedVersion(fromOcelli)
+  let found: Partial<Internals>
 
   try {
     const fromPlaywrightTest = createRequire(
@@ -49,17 +76,53 @@ export function resolveInternals(fromUrl: string): Internals {
       fromPlaywrightTest.resolve('playwright'),
     )
 
-    return {
+    found = {
       ...fromPlaywright('playwright-core/lib/utilsBundle'),
       ListReporter: fromPlaywrightTest('playwright/lib/runner').ListReporter,
     }
   } catch (cause) {
     throw new Error(
-      `ocelli could not reach Playwright's internal modules (@playwright/test ${installedVersion(fromOcelli)}). ocelli resolves them through @playwright/test, which must be installed alongside it.`,
+      `ocelli could not reach Playwright's internal modules (@playwright/test ${version}). ocelli resolves them through @playwright/test, which must be installed alongside it.`,
       { cause },
     )
   }
+
+  return verifyInternals(found, version)
 }
+
+export function verifyInternals(found: unknown, version: string): Internals {
+  const candidate = found as Partial<Internals>
+  const changed = REQUIRED_SHAPE.filter(([, holds]) => !holds(candidate)).map(
+    ([what]) => what,
+  )
+
+  if (changed.length === 0) return candidate as Internals
+
+  throw new Error(
+    `ocelli cannot work with @playwright/test ${version}. ocelli reads Playwright's private modules, and this version has moved what it reads:\n  - ${changed.join('\n  - ')}\nUpgrade ocelli, or hold @playwright/test at the version you were on.`,
+  )
+}
+
+// The screen is instance state, built by Playwright's constructor, so the
+// module check above cannot see it.
+export function verifyScreen(screen: unknown) {
+  const candidate = screen as Partial<TerminalScreen>
+
+  if (
+    typeof candidate?.stdout?.write === 'function' &&
+    typeof candidate?.colors?.red === 'function'
+  ) {
+    return
+  }
+
+  throw new Error(
+    `ocelli cannot work with @playwright/test ${playwrightVersion}. The reporter's screen no longer offers stdout.write and colors.red, which ocelli writes and colours through. Upgrade ocelli, or hold @playwright/test at the version you were on.`,
+  )
+}
+
+export const playwrightVersion: string = installedVersion(
+  createRequire(import.meta.url),
+)
 
 export const { PNG, getEastAsianWidth, ListReporter } =
   resolveInternals(import.meta.url)

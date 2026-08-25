@@ -99,6 +99,18 @@ function drive(
   return written.join('')
 }
 
+test('a screen without the parts ocelli writes through is rejected at once', () => {
+  assert.throws(
+    () => new Ocelli({ screen: { isTTY: true, ttyWidth: 80 } }),
+    (error: Error) => {
+      assert.match(error.message, /screen/)
+      assert.match(error.message, /@playwright\/test/)
+
+      return true
+    },
+  )
+})
+
 test('without colours the destinations survive as visible text', () => {
   const written: string[] = []
   const reporter = new Ocelli({

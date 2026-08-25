@@ -26,3 +26,24 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: ./scripts/smoke-package.sh
+
+  # The lockfile pins whatever the devDependency resolved to, which drifts away
+  # from the floor the peer range promises. This job installs the promise.
+  floor-playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install the lowest Playwright the peer range allows
+        run: |
+          floor=$(node -p "require('./package.json').peerDependencies['@playwright/test'].match(/\d+\.\d+\.\d+/)[0]")
+          echo "installing @playwright/test@$floor"
+          npm install --no-save "@playwright/test@$floor"
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: ./scripts/smoke-package.sh

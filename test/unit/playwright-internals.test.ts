@@ -9,6 +9,7 @@ import {
   ListReporter,
   PNG,
   resolveInternals,
+  verifyInternals,
 } from '#src/playwright-internals'
 
 test('the private Playwright bundle resolves through the dependency chain', () => {
@@ -20,6 +21,43 @@ test('the private Playwright bundle resolves through the dependency chain', () =
   assert.ok(
     typeof ListReporter.prototype._updateLineCountAndNewLineFlagForOutput ===
       'function',
+  )
+})
+
+test('the installed Playwright satisfies the surface ocelli checks for', () => {
+  const installed = { PNG, getEastAsianWidth, ListReporter }
+
+  assert.equal(verifyInternals(installed, '1.62.1'), installed)
+})
+
+test('a renamed private method is named in the error, with the version', () => {
+  class WithoutTheRewriteHooks {}
+
+  assert.throws(
+    () =>
+      verifyInternals(
+        { PNG, getEastAsianWidth, ListReporter: WithoutTheRewriteHooks },
+        '9.9.9',
+      ),
+    (error: Error) => {
+      assert.match(error.message, /9\.9\.9/)
+      assert.match(error.message, /_maybeWriteNewLine/)
+      assert.match(error.message, /_updateLineCountAndNewLineFlagForOutput/)
+
+      return true
+    },
+  )
+})
+
+test('a missing bundle export is named without mentioning the intact ones', () => {
+  assert.throws(
+    () => verifyInternals({ getEastAsianWidth, ListReporter }, '9.9.9'),
+    (error: Error) => {
+      assert.match(error.message, /PNG/)
+      assert.doesNotMatch(error.message, /getEastAsianWidth/)
+
+      return true
+    },
   )
 })
 
