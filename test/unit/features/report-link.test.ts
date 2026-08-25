@@ -65,6 +65,37 @@ test('the legacy PLAYWRIGHT_HTML_REPORT still overrides the outputFolder', (t) =
   assert.equal(link, 'file:///legacy/report/index.html#?testId=abc123')
 })
 
+test('an empty environment variable is ignored, as Playwright ignores it', (t) => {
+  process.env.PLAYWRIGHT_HTML_OUTPUT_DIR = ''
+  t.after(() => {
+    delete process.env.PLAYWRIGHT_HTML_OUTPUT_DIR
+  })
+
+  const link = reportLink(
+    '/work/e2e',
+    [['html', { outputFolder: 'out/report' }]],
+    'abc123',
+  )
+
+  assert.equal(link, 'file:///work/e2e/out/report/index.html#?testId=abc123')
+})
+
+test('an empty outputFolder falls back to the default folder', (t) => {
+  const repository = mkdtempSync(join(tmpdir(), 'ocelli-'))
+
+  t.after(() => rmSync(repository, { recursive: true, force: true }))
+  writeFileSync(join(repository, 'package.json'), '{}')
+
+  const link = reportLink(repository, [['html', { outputFolder: '' }]], 'abc123')
+
+  const expected = pathToFileURL(
+    join(repository, 'playwright-report', 'index.html'),
+  )
+  expected.hash = '?testId=abc123'
+
+  assert.equal(link, expected.href)
+})
+
 test('the default folder sits beside the nearest package.json above the config', (t) => {
   const repository = mkdtempSync(join(tmpdir(), 'ocelli-'))
   const configDir = join(repository, 'packages', 'e2e')
