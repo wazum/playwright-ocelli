@@ -1,5 +1,13 @@
 export type Mode = 'auto' | 'blocks' | 'kitty' | 'off'
 
+export type ResolvedMode = Exclude<Mode, 'auto'>
+
+export type Environment = {
+  isTTY: boolean
+  hasColours: boolean
+  isCI: boolean
+}
+
 export type Options = {
   mode: Mode
   maxImages: number
@@ -18,11 +26,22 @@ const DEFAULTS: Options = {
 
 export function resolveOptions(given: Record<string, unknown>): Options {
   return {
-    mode: asMode(given.mode),
+    mode: asMode(process.env.OCELLI_MODE ?? given.mode),
     maxImages: (given.maxImages as number) ?? DEFAULTS.maxImages,
     maxRows: (given.maxRows as number) ?? DEFAULTS.maxRows,
     cellAspect: (given.cellAspect as number) ?? DEFAULTS.cellAspect,
   }
+}
+
+export function resolveMode(
+  configured: Mode,
+  environment: Environment,
+): ResolvedMode {
+  if (!environment.hasColours) return 'off'
+  if (configured !== 'auto') return configured
+  if (!environment.isTTY || environment.isCI) return 'off'
+
+  return 'blocks'
 }
 
 function asMode(value: unknown): Mode {
