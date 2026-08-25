@@ -49,7 +49,7 @@ export default class Ocelli extends ListReporter {
     this.#snapshotFailures++
     this.#writeLines([format(analyse(diff))])
     this.#drawWithinBudget(mode, diff)
-    this.#writeLines([this.#destinationsFor(diffPath, test)])
+    this.#writeLines(this.#destinationsFor(diffPath, test))
   }
 
   async onEnd(result: unknown) {
@@ -97,27 +97,38 @@ export default class Ocelli extends ListReporter {
     this.screen.stdout.write(`${INDENT}${escape}\n`)
   }
 
-  #destinationsFor(diffPath: string, test: TestCase) {
+  #destinationsFor(diffPath: string, test: TestCase): Line[] {
     const shown = truncateStart(
       relative(process.cwd(), diffPath),
       this.#budgetColumns(),
     )
-    const destinations = [
-      hyperlink(shown.emit, pathToFileURL(diffPath).href),
-    ]
     const report = reportLink(this.#configDir, this.config.reporter, test.id)
 
-    if (report !== null) {
-      destinations.push(hyperlink('report', report))
+    // A stripped BEL hyperlink collapses to its display text, and the report
+    // link's display text is the word "report" - the URL would be gone.
+    if (!this.#hasColours()) {
+      const plain = [shown]
+
+      if (report !== null) plain.push(line(report))
+
+      return plain
     }
 
-    return joined(destinations, SEPARATOR)
+    const destinations = [hyperlink(shown.emit, pathToFileURL(diffPath).href)]
+
+    if (report !== null) destinations.push(hyperlink('report', report))
+
+    return [joined(destinations, SEPARATOR)]
+  }
+
+  #hasColours() {
+    return this.screen.colors.red('x') !== 'x'
   }
 
   #renderMode() {
     return resolveMode(this.#options.mode, {
       isTTY: Boolean(this.screen.isTTY),
-      hasColours: this.screen.colors.red('x') !== 'x',
+      hasColours: this.#hasColours(),
       isCI: Boolean(process.env.CI),
     })
   }

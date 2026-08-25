@@ -12,7 +12,7 @@ const diffAttachment = {
 const FIXTURE = new URL('./fixtures/one-digit-diff.png', import.meta.url)
   .pathname
 
-function fakeScreen(written: string[]) {
+function fakeScreen(written: string[], colours = true) {
   return {
     isTTY: true,
     ttyWidth: 80,
@@ -22,8 +22,9 @@ function fakeScreen(written: string[]) {
       {
         get: (_target, key) =>
           key === 'enabled'
-            ? true
-            : (text: string) => `\x1b[2m${text}\x1b[22m`,
+            ? colours
+            : (text: string) =>
+                colours ? `\x1b[2m${text}\x1b[22m` : text,
       },
     ),
     stdout: {
@@ -97,6 +98,33 @@ function drive(
 
   return written.join('')
 }
+
+test('without colours the destinations survive as visible text', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written, false),
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure({ ...fakeConfig, reporter: [['html']] })
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('price renders', 19, 'test-a')
+  const result = failedWith(FIXTURE)
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  const output = written.join('')
+
+  assert.ok(!output.includes('\x1b]8;;'), 'a hyperlink would be stripped away')
+  assert.ok(output.includes('src/fixtures/one-digit-diff.png'), 'lost the path')
+  assert.ok(
+    output.includes('playwright-report/index.html#?testId=test-a'),
+    'the report URL vanished instead of being printed',
+  )
+})
 
 function driveFailures(count: number, options: Record<string, unknown> = {}) {
   const written: string[] = []
