@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-25
+
 ### Fixed
 
 - `ocelli/package.json` is resolvable again. `exports` declared only the root
@@ -42,5 +44,6 @@ First release.
 - Terminal cell widths account for East Asian width, emoji presentation and
   flags; characters that reorder or hide text are stripped from printed paths.
 
-[unreleased]: https://github.com/wazum/playwright-ocelli/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/wazum/playwright-ocelli/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/wazum/playwright-ocelli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/wazum/playwright-ocelli/releases/tag/v0.1.0
