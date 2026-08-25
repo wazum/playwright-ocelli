@@ -1,3 +1,4 @@
+import { line } from '../../line.ts'
 import type { DiffSummary } from './analyse.ts'
 
 export function format(summary: DiffSummary) {
@@ -21,8 +22,4 @@ function describeRegion(
   if (isWholeFrame) return 'whole frame'
 
   return `${boundingBox.width}×${boundingBox.height} at ${boundingBox.x},${boundingBox.y}`
-}
-
-function line(emit: string) {
-  return { emit, visibleWidth: emit.length }
 }
