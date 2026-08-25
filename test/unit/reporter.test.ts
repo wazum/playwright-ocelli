@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import Ocelli, { qualifyingDiff } from './reporter.ts'
+import Ocelli, { qualifyingDiff } from '#src/reporter'
 
 const diffAttachment = {
   name: 'price-diff.png',
@@ -9,7 +9,7 @@ const diffAttachment = {
   path: '/work/test-results/checkout/price-diff.png',
 }
 
-const FIXTURE = new URL('./fixtures/one-digit-diff.png', import.meta.url)
+const FIXTURE = new URL('../fixtures/one-digit-diff.png', import.meta.url)
   .pathname
 
 function fakeScreen(written: string[], colours = true) {
@@ -119,7 +119,7 @@ test('without colours the destinations survive as visible text', () => {
   const output = written.join('')
 
   assert.ok(!output.includes('\x1b]8;;'), 'a hyperlink would be stripped away')
-  assert.ok(output.includes('src/fixtures/one-digit-diff.png'), 'lost the path')
+  assert.ok(output.includes('test/fixtures/one-digit-diff.png'), 'lost the path')
   assert.ok(
     output.includes('playwright-report/index.html#?testId=test-a'),
     'the report URL vanished instead of being printed',
@@ -314,7 +314,7 @@ test('the diff path is printed as a hyperlink to the file', () => {
     written.includes(`\x1b]8;;${pathToFileURL(FIXTURE).href}\x07`),
     'no hyperlink to the diff file was printed',
   )
-  assert.ok(written.includes('src/fixtures/one-digit-diff.png'))
+  assert.ok(written.includes('test/fixtures/one-digit-diff.png'))
 })
 
 test('the report link appears only when html is configured', () => {

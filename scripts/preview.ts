@@ -17,7 +17,7 @@ const CELL_ASPECT = 2.1
 const useKitty = process.argv.includes('--kitty')
 const path =
   process.argv.slice(2).find((argument) => !argument.startsWith('--')) ??
-  'src/fixtures/one-digit-diff.png'
+  'test/fixtures/one-digit-diff.png'
 const diff = readFileSync(path)
 const image = PNG.sync.read(diff)
 

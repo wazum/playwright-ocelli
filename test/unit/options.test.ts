@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { resolveMode, resolveOptions } from './options.ts'
+import { resolveMode, resolveOptions } from '#src/options'
 
 const COLOURED_TERMINAL = { isTTY: true, hasColours: true, isCI: false }
 

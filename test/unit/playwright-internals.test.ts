@@ -9,7 +9,7 @@ import {
   ListReporter,
   PNG,
   resolveInternals,
-} from './playwright-internals.ts'
+} from '#src/playwright-internals'
 
 test('the private Playwright bundle resolves through the dependency chain', () => {
   assert.equal(typeof PNG.sync.read, 'function')

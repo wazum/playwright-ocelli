@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { PNG } from '../../playwright-internals.ts'
-import { renderBlocks } from './render-blocks.ts'
+import { renderBlocks } from '#src/features/diff-image/render-blocks'
+import { PNG } from '#src/playwright-internals'
 
 const oneDigitDiff = PNG.sync.read(
-  readFileSync(new URL('../../fixtures/one-digit-diff.png', import.meta.url)),
+  readFileSync(new URL('../../../fixtures/one-digit-diff.png', import.meta.url)),
 )
 
 function image(width: number, height: number, pixels: number[][]) {

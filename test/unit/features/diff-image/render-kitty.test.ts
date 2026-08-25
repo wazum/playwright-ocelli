@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { renderKitty } from './render-kitty.ts'
+import { renderKitty } from '#src/features/diff-image/render-kitty'
 
 function chunksOf(escape: string) {
   return escape

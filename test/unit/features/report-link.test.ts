@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import { reportLink } from './report-link.ts'
+import { reportLink } from '#src/features/report-link'
 
 test('no html reporter configured means no report link', () => {
   assert.equal(reportLink('/work', [['list'], ['json']], 'abc123'), null)

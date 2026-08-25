@@ -9,6 +9,9 @@
     "url": "git+https://github.com/wazum/playwright-ocelli.git"
   },
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
   "engines": {
     "node": ">=20.19"
   },
@@ -20,7 +23,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'src/**/*.test.ts'",
+    "test": "node --test 'test/unit/**/*.test.ts'",
     "preview": "node scripts/preview.ts",
     "demo": "playwright test --config examples/demo/playwright.config.ts",
     "demo:baseline": "BASELINE=1 playwright test --config examples/demo/playwright.config.ts --update-snapshots"

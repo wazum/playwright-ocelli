@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { format } from './format.ts'
+import { format } from '#src/features/diff-summary/format'
 
 test('summary reads as pixel count, anti-aliasing, then bounding box', () => {
   const line = format({

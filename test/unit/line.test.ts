@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { hyperlink, line, truncateStart } from './line.ts'
+import { hyperlink, line, truncateStart } from '#src/line'
 
 test('a wide grapheme takes two terminal cells', () => {
   assert.equal(line('価格').visibleWidth, 4)

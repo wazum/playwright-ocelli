@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { fit } from './fit.ts'
+import { fit } from '#src/features/diff-image/fit'
 
 const CELL_ASPECT = 2.1
 
