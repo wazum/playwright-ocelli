@@ -27,6 +27,28 @@ jobs:
       - run: npm run build
       - run: ./scripts/smoke-package.sh
 
+  # The test suite needs a Node new enough to strip TypeScript, so it can never
+  # run on the oldest Node the package claims. The built tarball can, and that
+  # is what someone on that Node installs.
+  floor-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # Installed outside the project on purpose. In node_modules/.bin it would
+      # join the PATH of every later npm run, and devEngines then refuses the
+      # build outright with EBADDEVENGINES.
+      - name: Fetch the lowest Node the engines field allows
+        run: |
+          floor=$(node -p "require('./package.json').engines.node.match(/\d+\.\d+/)[0]")
+          echo "importing with node@$floor"
+          npm install --no-save --prefix "$RUNNER_TEMP/node-floor" "node@$floor"
+      - run: ./scripts/smoke-package.sh "$RUNNER_TEMP/node-floor/node_modules/.bin/node"
+
   # The lockfile pins whatever the devDependency resolved to, which drifts away
   # from the floor the peer range promises. This job installs the promise.
   floor-playwright:
