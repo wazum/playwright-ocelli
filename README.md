@@ -1,11 +1,11 @@
 # ocelli
 
+[![npm](https://img.shields.io/npm/v/ocelli)](https://www.npmjs.com/package/ocelli)
 [![CI](https://github.com/wazum/playwright-ocelli/actions/workflows/ci.yml/badge.svg)](https://github.com/wazum/playwright-ocelli/actions/workflows/ci.yml)
 [![node](https://img.shields.io/badge/node-20.19%2B-5FA04E)](#requirements)
 [![playwright](https://img.shields.io/badge/playwright-1.62.1%2B-2EAD33)](#requirements)
 [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#requirements)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-![status](https://img.shields.io/badge/status-pre--release-orange)
 
 A Playwright reporter that prints screenshot diffs in your terminal, next to the
 failure that produced them.
@@ -45,8 +45,6 @@ At the end of a run:
 ```
 
 ## Install
-
-> Not on npm yet — the name is unclaimed.
 
 ```
 npm install -D ocelli
