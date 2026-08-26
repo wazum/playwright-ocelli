@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-26
+
 ### Added
 
 - The image is cropped to the change, with a margin, when the frame is large
@@ -66,6 +68,7 @@ First release.
 - Terminal cell widths account for East Asian width, emoji presentation and
   flags; characters that reorder or hide text are stripped from printed paths.
 
-[unreleased]: https://github.com/wazum/playwright-ocelli/compare/v0.1.1...HEAD
+[unreleased]: https://github.com/wazum/playwright-ocelli/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/wazum/playwright-ocelli/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/wazum/playwright-ocelli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/wazum/playwright-ocelli/releases/tag/v0.1.0
