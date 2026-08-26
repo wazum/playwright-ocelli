@@ -3,6 +3,18 @@
   "version": "0.1.1",
   "description": "A Playwright reporter that prints screenshot diffs in your terminal, next to the failure that produced them.",
   "license": "MIT",
+  "keywords": [
+    "playwright",
+    "playwright-reporter",
+    "reporter",
+    "visual-regression",
+    "screenshot-testing",
+    "toHaveScreenshot",
+    "image-diff",
+    "terminal",
+    "kitty-graphics-protocol",
+    "testing"
+  ],
   "author": "Wolfgang Klinger <wolfgang@wazum.com>",
   "repository": {
     "type": "git",
