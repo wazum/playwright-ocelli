@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict'
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import Ocelli from '#src/reporter'
@@ -197,6 +200,49 @@ test('a run with snapshot failures ends by saying how to accept them', async () 
       ),
     'no acceptance hint at the end of the run',
   )
+})
+
+test('a retried snapshot is counted once, not once per attempt', async (t) => {
+  // A retry writes the same diff under a -retryN output directory, so the
+  // paths differ while the snapshot does not.
+  const attempts = mkdtempSync(join(tmpdir(), 'ocelli-'))
+  const perAttempt = ['run', 'run-retry1'].map((directory) => {
+    const inside = join(attempts, directory)
+
+    mkdirSync(inside)
+    copyFileSync(FIXTURE, join(inside, 'price-diff.png'))
+
+    return join(inside, 'price-diff.png')
+  })
+
+  t.after(() => rmSync(attempts, { recursive: true, force: true }))
+
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'off',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('price renders', 19, 'test-a')
+
+  perAttempt.forEach((path, retry) => {
+    const result = {
+      ...failedWith(path),
+      retry,
+      attachments: [{ name: 'price-diff.png', contentType: 'image/png', path }],
+    }
+
+    reporter.onTestBegin(failing, result)
+    reporter.onTestEnd(failing, result)
+  })
+
+  await reporter.onEnd({ status: 'failed' })
+
+  assert.match(written.join(''), /1 snapshot differs/)
 })
 
 function passing() {

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { relative } from 'node:path'
+import { basename, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { fit } from './features/diff-image/fit.ts'
 import { renderBlocks } from './features/diff-image/render-blocks.ts'
@@ -28,7 +28,7 @@ export default class Ocelli extends ListReporter {
   #configDir: string
   #imagesDrawn = 0
   #budgetAnnounced = false
-  #snapshotFailures = 0
+  #snapshotsSeen = new Set<string>()
 
   constructor(options: Record<string, unknown> = {}) {
     super(options)
@@ -49,7 +49,9 @@ export default class Ocelli extends ListReporter {
     const diff = readFileSync(diffPath)
     const image = PNG.sync.read(diff)
 
-    this.#snapshotFailures++
+    // A retry writes the same snapshot to a -retryN directory, so the path
+    // differs while the snapshot does not.
+    this.#snapshotsSeen.add(`${test.id}::${basename(diffPath)}`)
     this.#writeLines([format(analyse(image))])
     this.#drawWithinBudget(this.#renderMode(), diff, image)
     this.#writeLines(this.#destinationsFor(diffPath, test))
@@ -58,15 +60,16 @@ export default class Ocelli extends ListReporter {
   override async onEnd(result: unknown) {
     await super.onEnd(result)
 
-    if (this.#snapshotFailures === 0) return
+    const differing = this.#snapshotsSeen.size
 
-    const differ =
-      this.#snapshotFailures === 1 ? 'snapshot differs' : 'snapshots differ'
+    if (differing === 0) return
+
+    const differ = differing === 1 ? 'snapshot differs' : 'snapshots differ'
 
     this.#writeLines(
       [
         line(
-          `${this.#snapshotFailures} ${differ} · accept with: npx playwright test --update-snapshots`,
+          `${differing} ${differ} · accept with: npx playwright test --update-snapshots`,
         ),
       ],
       '',
