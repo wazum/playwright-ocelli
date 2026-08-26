@@ -24,6 +24,8 @@ type Line = { emit: string; visibleWidth: number }
 type Sizes = NonNullable<ReturnType<typeof frameSizes>>
 type Region = NonNullable<ReturnType<typeof cropFor>>
 
+export type { Mode, Options } from './options.ts'
+
 const INDENT = '       '
 const FALLBACK_COLUMNS = 80
 const SEPARATOR = line(' · ')
