@@ -46,8 +46,20 @@ export default class Ocelli extends ListReporter {
   }
 
   #report(diffPath: string, test: TestCase) {
-    const diff = readFileSync(diffPath)
-    const image = PNG.sync.read(diff)
+    let diff: Buffer
+    let image: DecodedImage
+
+    // Playwright counts a throwing reporter as a failed run, so a diff that
+    // vanished or landed half-written must not escape this method.
+    try {
+      diff = readFileSync(diffPath)
+      image = PNG.sync.read(diff)
+    } catch {
+      this.#writeLines([line('diff could not be read')])
+      this.#writeLines(this.#destinationsFor(diffPath, test))
+
+      return
+    }
 
     // A retry writes the same snapshot to a -retryN directory, so the path
     // differs while the snapshot does not.

@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict'
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -243,6 +249,33 @@ test('a retried snapshot is counted once, not once per attempt', async (t) => {
   await reporter.onEnd({ status: 'failed' })
 
   assert.match(written.join(''), /1 snapshot differs/)
+})
+
+test('an unreadable diff says so instead of failing the whole run', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
+  const truncated = join(directory, 'truncated-diff.png')
+
+  writeFileSync(truncated, '')
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+
+  for (const path of [join(directory, 'gone-diff.png'), truncated]) {
+    const written: string[] = []
+    const reporter = new Ocelli({
+      screen: fakeScreen(written),
+      configDir: process.cwd(),
+      mode: 'blocks',
+    })
+
+    reporter.onConfigure(fakeConfig)
+    reporter.onBegin(fakeSuite)
+
+    const failing = fakeTest('price renders', 19, 'test-a')
+    const result = failedWith(path)
+
+    reporter.onTestBegin(failing, result)
+    assert.doesNotThrow(() => reporter.onTestEnd(failing, result), path)
+    assert.match(written.join(''), /could not be read/)
+  }
 })
 
 function passing() {
