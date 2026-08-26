@@ -6,6 +6,7 @@ import { renderBlocks } from './features/diff-image/render-blocks.ts'
 import { renderKitty } from './features/diff-image/render-kitty.ts'
 import { analyse } from './features/diff-summary/analyse.ts'
 import { format } from './features/diff-summary/format.ts'
+import { frameSizes } from './features/diff-summary/frame-size.ts'
 import { reportLink } from './features/report-link.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
 import type { Options } from './options.ts'
@@ -16,7 +17,9 @@ import type { TestResult } from './qualifying-diffs.ts'
 import { qualifyingDiffs } from './qualifying-diffs.ts'
 
 type TestCase = { expectedStatus: string; id: string }
+type Attachment = { name: string; path?: string }
 type Line = { emit: string; visibleWidth: number }
+type Sizes = NonNullable<ReturnType<typeof frameSizes>>
 
 const INDENT = '       '
 const FALLBACK_COLUMNS = 80
@@ -41,11 +44,11 @@ export default class Ocelli extends ListReporter {
     super.onTestEnd(test, result)
 
     for (const diffPath of qualifyingDiffs(test, result)) {
-      this.#report(diffPath, test)
+      this.#report(diffPath, test, result.attachments)
     }
   }
 
-  #report(diffPath: string, test: TestCase) {
+  #report(diffPath: string, test: TestCase, attachments: Attachment[]) {
     let diff: Buffer
     let image: DecodedImage
 
@@ -64,8 +67,21 @@ export default class Ocelli extends ListReporter {
     // A retry writes the same snapshot to a -retryN directory, so the path
     // differs while the snapshot does not.
     this.#snapshotsSeen.add(`${test.id}::${basename(diffPath)}`)
-    this.#writeLines([format(analyse(image))])
-    this.#drawWithinBudget(this.#renderMode(), diff, image)
+
+    const summary = analyse(image)
+    const sizes =
+      summary.boundingBox === null
+        ? frameSizes(attachments, basename(diffPath))
+        : null
+
+    this.#writeLines([sizes === null ? format(summary) : describeSizes(sizes)])
+
+    // Nothing red or yellow means there is nothing an image could show. A
+    // size mismatch produces exactly that: the expected frame, faded to grey.
+    if (summary.boundingBox !== null) {
+      this.#drawWithinBudget(this.#renderMode(), diff, image)
+    }
+
     this.#writeLines(this.#destinationsFor(diffPath, test))
   }
 
@@ -179,6 +195,12 @@ export default class Ocelli extends ListReporter {
       this.screen.stdout.write(`${line.emit}\n`)
     }
   }
+}
+
+function describeSizes({ expected, actual }: Sizes): Line {
+  return line(
+    `size differs · expected ${expected.width}×${expected.height}, got ${actual.width}×${actual.height}`,
+  )
 }
 
 function withPrefix(line: Line, prefix: string): Line {

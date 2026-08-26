@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
+import { PNG } from '#src/playwright-internals'
 import Ocelli from '#src/reporter'
 
 const diffAttachment = {
@@ -17,6 +18,13 @@ const diffAttachment = {
   contentType: 'image/png',
   path: '/work/test-results/checkout/price-diff.png',
 }
+
+const pngOf = (width: number, height: number) =>
+  PNG.sync.write({
+    width,
+    height,
+    data: Buffer.alloc(width * height * 4, 0xff),
+  })
 
 const FIXTURE = new URL('../fixtures/one-digit-diff.png', import.meta.url)
   .pathname
@@ -249,6 +257,77 @@ test('a retried snapshot is counted once, not once per attempt', async (t) => {
   await reporter.onEnd({ status: 'failed' })
 
   assert.match(written.join(''), /1 snapshot differs/)
+})
+
+test('a diff with nothing marked draws no image', () => {
+  const unmarked = new URL('../fixtures/no-marked-pixels.png', import.meta.url)
+    .pathname
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('size mismatch', 19, 'test-a')
+  const result = failedWith(unmarked)
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  assert.ok(
+    !written.join('').includes('▀'),
+    'drew block art for a diff with nothing to show',
+  )
+})
+
+test('a size mismatch reports both sizes instead of missing colours', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
+  const named = (suffix: string) => join(directory, `size-${suffix}.png`)
+
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  copyFileSync(
+    new URL('../fixtures/no-marked-pixels.png', import.meta.url).pathname,
+    named('diff'),
+  )
+  writeFileSync(named('expected'), pngOf(400, 200))
+  writeFileSync(named('actual'), pngOf(300, 150))
+
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('size mismatch', 19, 'test-a')
+  const result = {
+    ...failedWith(named('diff')),
+    attachments: [
+      { name: 'size-diff.png', contentType: 'image/png', path: named('diff') },
+      {
+        name: 'size-expected.png',
+        contentType: 'image/png',
+        path: named('expected'),
+      },
+      {
+        name: 'size-actual.png',
+        contentType: 'image/png',
+        path: named('actual'),
+      },
+    ],
+  }
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  assert.match(written.join(''), /size differs · expected 400×200, got 300×150/)
 })
 
 test('an unreadable diff says so instead of failing the whole run', (t) => {
