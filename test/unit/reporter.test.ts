@@ -259,6 +259,47 @@ test('a retried snapshot is counted once, not once per attempt', async (t) => {
   assert.match(written.join(''), /1 snapshot differs/)
 })
 
+test('a small diff in a full-page screenshot is cropped so it stays visible', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
+  const tall = join(directory, 'page-diff.png')
+
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+
+  const width = 1280
+  const height = 4000
+  const data = Buffer.alloc(width * height * 4, 0xff)
+
+  for (let row = 1000; row < 1030; row++) {
+    for (let column = 600; column < 700; column++) {
+      data.set([255, 0, 0, 255], (row * width + column) * 4)
+    }
+  }
+
+  writeFileSync(tall, PNG.sync.write({ width, height, data }))
+
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('page renders', 19, 'test-a')
+  const result = failedWith(tall)
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  const output = written.join('')
+  const redCells = output.split('2;255;0;0').length - 1
+
+  assert.ok(redCells > 20, `only ${redCells} red half-cells survived`)
+  assert.match(output, /cropped to the change/)
+})
+
 test('a diff with nothing marked draws no image', () => {
   const unmarked = new URL('../fixtures/no-marked-pixels.png', import.meta.url)
     .pathname

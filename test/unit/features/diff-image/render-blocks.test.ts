@@ -70,6 +70,25 @@ test('a 63-pixel diff survives downscaling to 32 columns', () => {
   assert.ok(paintsRed, 'the 63-pixel diff vanished from the rendered image')
 })
 
+test('a region renders only that part of the image', () => {
+  // Left column blue, right column red. Rendered whole, red outranks blue and
+  // the cell is red; rendered over the left column only, it must be blue.
+  const halved = image(2, 2, [BLUE, RED, BLUE, RED])
+  const size = { columns: 1, rows: 1 }
+
+  assert.equal(
+    renderBlocks(halved, size)[0].emit,
+    '\x1b[38;2;255;0;0;48;2;255;0;0m▀\x1b[0m',
+    'the whole image should be dominated by red',
+  )
+
+  assert.equal(
+    renderBlocks(halved, size, { x: 0, y: 0, width: 1, height: 2 })[0].emit,
+    '\x1b[38;2;0;0;255;48;2;0;0;255m▀\x1b[0m',
+    'the region outside the crop leaked into the cell',
+  )
+})
+
 test('every rendered line declares exactly the cell count', () => {
   const lines = renderBlocks(oneDigitDiff, { columns: 64, rows: 16 })
 

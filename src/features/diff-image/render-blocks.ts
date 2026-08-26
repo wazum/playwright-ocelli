@@ -1,6 +1,7 @@
 import type { DecodedImage } from '../../playwright-internals.ts'
 
 type Size = { columns: number; rows: number }
+type Region = { x: number; y: number; width: number; height: number }
 type Colour = [number, number, number]
 
 const UPPER_HALF_BLOCK = '▀'
@@ -9,14 +10,18 @@ const SATURATION_RANGE = 256
 const ANTIALIASED_TIER = SATURATION_RANGE
 const DIFFERENT_TIER = SATURATION_RANGE * 2
 
-export function renderBlocks(image: DecodedImage, size: Size) {
+export function renderBlocks(
+  image: DecodedImage,
+  size: Size,
+  region: Region = { x: 0, y: 0, width: image.width, height: image.height },
+) {
   const lines = []
 
   for (let row = 0; row < size.rows; row++) {
     const cells = []
 
     for (let column = 0; column < size.columns; column++) {
-      cells.push(cellFor(image, size, column, row))
+      cells.push(cellFor(image, size, region, column, row))
     }
 
     lines.push({ emit: cells.join('') + RESET, visibleWidth: size.columns })
@@ -25,15 +30,21 @@ export function renderBlocks(image: DecodedImage, size: Size) {
   return lines
 }
 
-function cellFor(image: DecodedImage, size: Size, column: number, row: number) {
-  const left = Math.floor((column * image.width) / size.columns)
+function cellFor(
+  image: DecodedImage,
+  size: Size,
+  region: Region,
+  column: number,
+  row: number,
+) {
+  const left = region.x + Math.floor((column * region.width) / size.columns)
   const right = Math.max(
-    Math.floor(((column + 1) * image.width) / size.columns),
+    region.x + Math.floor(((column + 1) * region.width) / size.columns),
     left + 1,
   )
-  const top = Math.floor((row * image.height) / size.rows)
+  const top = region.y + Math.floor((row * region.height) / size.rows)
   const bottom = Math.max(
-    Math.floor(((row + 1) * image.height) / size.rows),
+    region.y + Math.floor(((row + 1) * region.height) / size.rows),
     top + 1,
   )
   const middle = Math.floor((top + bottom) / 2)

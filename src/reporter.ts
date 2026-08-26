@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { basename, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { cropFor, cropped } from './features/diff-image/crop.ts'
 import { fit } from './features/diff-image/fit.ts'
 import { renderBlocks } from './features/diff-image/render-blocks.ts'
 import { renderKitty } from './features/diff-image/render-kitty.ts'
@@ -20,6 +21,7 @@ type TestCase = { expectedStatus: string; id: string }
 type Attachment = { name: string; path?: string }
 type Line = { emit: string; visibleWidth: number }
 type Sizes = NonNullable<ReturnType<typeof frameSizes>>
+type Region = NonNullable<ReturnType<typeof cropFor>>
 
 const INDENT = '       '
 const FALLBACK_COLUMNS = 80
@@ -74,12 +76,19 @@ export default class Ocelli extends ListReporter {
         ? frameSizes(attachments, basename(diffPath))
         : null
 
-    this.#writeLines([sizes === null ? format(summary) : describeSizes(sizes)])
-
     // Nothing red or yellow means there is nothing an image could show. A
     // size mismatch produces exactly that: the expected frame, faded to grey.
+    const region =
+      summary.boundingBox === null
+        ? null
+        : cropFor(summary.boundingBox, image, this.#sizeFor(image))
+
+    this.#writeLines([
+      summaryLine(sizes === null ? format(summary) : describeSizes(sizes), region),
+    ])
+
     if (summary.boundingBox !== null) {
-      this.#drawWithinBudget(this.#renderMode(), diff, image)
+      this.#drawWithinBudget(this.#renderMode(), diff, image, region)
     }
 
     this.#writeLines(this.#destinationsFor(diffPath, test))
@@ -104,7 +113,12 @@ export default class Ocelli extends ListReporter {
     )
   }
 
-  #drawWithinBudget(mode: string, diff: Buffer, image: DecodedImage) {
+  #drawWithinBudget(
+    mode: string,
+    diff: Buffer,
+    image: DecodedImage,
+    region: Region | null,
+  ) {
     if (mode === 'off') return
 
     if (this.#imagesDrawn >= this.#options.maxImages) {
@@ -116,17 +130,23 @@ export default class Ocelli extends ListReporter {
       return
     }
 
+    const shown = region ?? image
+
     if (mode === 'blocks') {
-      this.#writeLines(renderBlocks(image, this.#sizeFor(image)))
+      this.#writeLines(
+        renderBlocks(image, this.#sizeFor(shown), region ?? undefined),
+      )
     }
 
-    if (mode === 'kitty') this.#writeImage(diff, image)
+    if (mode === 'kitty') {
+      this.#writeImage(region === null ? diff : cropped(image, region), shown)
+    }
 
     this.#imagesDrawn++
   }
 
-  #writeImage(diff: Buffer, image: DecodedImage) {
-    const { escape, rows } = renderKitty(diff, this.#sizeFor(image))
+  #writeImage(diff: Buffer, shown: { width: number; height: number }) {
+    const { escape, rows } = renderKitty(diff, this.#sizeFor(shown))
 
     this._maybeWriteNewLine()
     this._updateLineCountAndNewLineFlagForOutput('\n'.repeat(rows))
@@ -195,6 +215,12 @@ export default class Ocelli extends ListReporter {
       this.screen.stdout.write(`${line.emit}\n`)
     }
   }
+}
+
+function summaryLine(summary: Line, region: Region | null): Line {
+  if (region === null) return summary
+
+  return joined([summary, line('cropped to the change')], SEPARATOR)
 }
 
 function describeSizes({ expected, actual }: Sizes): Line {

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
+import { cropFor, cropped } from '../src/features/diff-image/crop.ts'
 import { fit } from '../src/features/diff-image/fit.ts'
 import { renderBlocks } from '../src/features/diff-image/render-blocks.ts'
 import { renderKitty } from '../src/features/diff-image/render-kitty.ts'
@@ -21,23 +22,33 @@ const path =
 const diff = readFileSync(path)
 const image = PNG.sync.read(diff)
 
-const summary = format(analyse(image))
-const size = fit({
-  imageWidth: image.width,
-  imageHeight: image.height,
-  maxColumns: MAX_COLUMNS,
-  maxRows: MAX_ROWS,
-  cellAspect: CELL_ASPECT,
-})
+const budget = (frame: { width: number; height: number }) =>
+  fit({
+    imageWidth: frame.width,
+    imageHeight: frame.height,
+    maxColumns: MAX_COLUMNS,
+    maxRows: MAX_ROWS,
+    cellAspect: CELL_ASPECT,
+  })
+
+const analysed = analyse(image)
+const summary = format(analysed)
+const region =
+  analysed.boundingBox === null
+    ? null
+    : cropFor(analysed.boundingBox, image, budget(image))
+const size = budget(region ?? image)
 const link = reportLink(process.cwd(), [['html']], 'preview-test-id')
 const shownPath = truncateStart(relative(process.cwd(), path), MAX_COLUMNS)
 
 console.log(`${INDENT}${summary.emit}`)
 
 if (useKitty) {
-  process.stdout.write(`${INDENT}${renderKitty(diff, size).escape}\n`)
+  const sent = region === null ? diff : cropped(image, region)
+
+  process.stdout.write(`${INDENT}${renderKitty(sent, size).escape}\n`)
 } else {
-  for (const row of renderBlocks(image, size)) {
+  for (const row of renderBlocks(image, size, region ?? undefined)) {
     console.log(`${INDENT}${row.emit}`)
   }
 }
@@ -45,6 +56,11 @@ if (useKitty) {
 console.log(
   `${INDENT}${shownPath.emit}${link === null ? '' : ` · ${hyperlink('report', link).emit}`}`,
 )
+const cropNote =
+  region === null
+    ? ''
+    : ` · cropped to ${region.width}×${region.height} at ${region.x},${region.y}`
+
 console.log(
-  `${INDENT}${image.width}×${image.height} px shown as ${size.columns}×${size.rows} cells`,
+  `${INDENT}${image.width}×${image.height} px shown as ${size.columns}×${size.rows} cells${cropNote}`,
 )
