@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The image is cropped to the change, with a margin, when the frame is large
+  enough to make it invisible. A small diff in a full-page screenshot used to
+  render as one or two cells; the summary line now says `cropped to the change`.
+- A size mismatch reports `size differs · expected 400×200, got 300×150` from
+  the expected and actual attachments, rather than `diff colours not
+  recognised`, and draws no image.
+- `Mode` and `Options` are exported from the entry point.
+- npm keywords, so the package is findable by search.
+
+### Fixed
+
+- A retried snapshot is counted once in the closing line. With `retries: 1` a
+  single differing snapshot was reported as two.
+- A diff that cannot be read prints `diff could not be read` instead of
+  throwing. Playwright counts a throwing reporter as a failed run, so a
+  vanished or half-written file could fail a run whose tests all passed.
+- The acceptance hint names the package manager the run was started with, so a
+  pnpm or yarn user is no longer told to use `npx`.
+- No image is drawn when nothing is marked, instead of sixteen rows of grey.
+
 ## [0.1.1] - 2026-08-25
 
 ### Fixed
