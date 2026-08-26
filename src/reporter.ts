@@ -12,6 +12,7 @@ import { reportLink } from './features/report-link.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
 import type { Options } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
+import { execCommand } from './package-manager.ts'
 import type { DecodedImage } from './playwright-internals.ts'
 import { ListReporter, PNG, verifyScreen } from './playwright-internals.ts'
 import type { TestResult } from './qualifying-diffs.ts'
@@ -106,7 +107,7 @@ export default class Ocelli extends ListReporter {
     this.#writeLines(
       [
         line(
-          `${differing} ${differ} · accept with: npx playwright test --update-snapshots`,
+          `${differing} ${differ} · accept with: ${execCommand()} playwright test --update-snapshots`,
         ),
       ],
       '',
