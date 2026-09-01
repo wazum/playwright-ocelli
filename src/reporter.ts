@@ -20,6 +20,7 @@ import type { TestResult } from './qualifying-diffs.ts'
 import { qualifyingDiffs } from './qualifying-diffs.ts'
 
 type TestCase = { expectedStatus: string; id: string }
+type RunResult = { status?: string }
 type Attachment = { name: string; path?: string }
 type Line = { emit: string; visibleWidth: number }
 type Sizes = NonNullable<ReturnType<typeof frameSizes>>
@@ -92,23 +93,14 @@ export default class Ocelli extends ListReporter {
     this.#writeLines(this.#destinationsFor(diffPath, test))
   }
 
-  override async onEnd(result: unknown) {
+  override async onEnd(result: RunResult) {
     await super.onEnd(result)
 
     const differing = this.#snapshotsSeen.size
 
     if (differing === 0) return
 
-    const differ = differing === 1 ? 'snapshot differs' : 'snapshots differ'
-
-    this.#writeLines(
-      [
-        line(
-          `${differing} ${differ} · accept with: ${execCommand()} playwright test --update-snapshots`,
-        ),
-      ],
-      '',
-    )
+    this.#writeLines([closingLine(differing, result.status === 'passed')], '')
   }
 
   #drawWithinBudget(
@@ -233,6 +225,20 @@ function describeChange(summary: DiffSummary, sizes: Sizes | null): Line {
 function describeSizes({ expected, actual }: Sizes): Line {
   return line(
     `size differs · expected ${expected.width}×${expected.height}, got ${actual.width}×${actual.height}`,
+  )
+}
+
+// Accepting a difference the run retried past would write the flake into the
+// baseline.
+function closingLine(differing: number, runPassed: boolean): Line {
+  const subject = `${differing} ${differing === 1 ? 'snapshot' : 'snapshots'}`
+
+  if (runPassed) return line(`${subject} differed, then passed on retry`)
+
+  const differ = differing === 1 ? 'differs' : 'differ'
+
+  return line(
+    `${subject} ${differ} · accept with: ${execCommand()} playwright test --update-snapshots`,
   )
 }
 

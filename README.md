@@ -49,6 +49,10 @@ At the end of a run:
 2 snapshots differ · accept with: npx playwright test --update-snapshots
 ```
 
+A snapshot that differed and then passed on a retry is reported without that
+advice — `1 snapshot differed, then passed on retry` — because accepting it
+would write the unstable rendering into the baseline.
+
 ## Install
 
 ```

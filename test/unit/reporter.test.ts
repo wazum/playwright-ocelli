@@ -259,6 +259,37 @@ test('a retried snapshot is counted once, not once per attempt', async (t) => {
   assert.match(written.join(''), /1 snapshot differs/)
 })
 
+test('a snapshot that passed on retry is not offered for acceptance', async () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'off',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const flaky = fakeTest('price renders', 19, 'test-a')
+  const first = failedWith(FIXTURE)
+  const second = { ...passing(), retry: 1 }
+
+  reporter.onTestBegin(flaky, first)
+  reporter.onTestEnd(flaky, first)
+  reporter.onTestBegin(flaky, second)
+  reporter.onTestEnd(flaky, second)
+
+  await reporter.onEnd({ status: 'passed' })
+
+  const output = written.join('')
+
+  assert.ok(
+    !output.includes('--update-snapshots'),
+    'offered to accept a snapshot the run did not fail on',
+  )
+  assert.match(output, /1 snapshot differed, then passed on retry/)
+})
+
 test('a small diff in a full-page screenshot is cropped so it stays visible', (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
   const tall = join(directory, 'page-diff.png')
