@@ -49,6 +49,39 @@ jobs:
           npm install --no-save --prefix "$RUNNER_TEMP/node-floor" "node@$floor"
       - run: ./scripts/smoke-package.sh "$RUNNER_TEMP/node-floor/node_modules/.bin/node"
 
+  # Every other job drives the reporter with a fake screen. This one lets real
+  # Playwright produce the diffs, so attachment naming and the list output
+  # ocelli indents against are covered too.
+  demo:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_COLOR: '1'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Only the darwin baselines are committed, so the linux ones are written
+      # here for the runs below to differ from.
+      - run: npm run demo:baseline
+      - name: A failing screenshot prints its summary, image and closing line
+        run: |
+          npm run demo >demo.log 2>&1 || true
+          cat demo.log
+          grep -q 'px different' demo.log
+          grep -q '▀' demo.log
+          grep -q 'snapshots differ · accept with' demo.log
+      - name: A frame that changed size is named as such
+        env:
+          DEMO_VIEWPORT_HEIGHT: '300'
+        run: |
+          npm run demo >resized.log 2>&1 || true
+          cat resized.log
+          grep -q 'size differs · expected 480×240, got 480×300' resized.log
+
   # The lockfile pins whatever the devDependency resolved to, which drifts away
   # from the floor the peer range promises. This job installs the promise.
   floor-playwright:

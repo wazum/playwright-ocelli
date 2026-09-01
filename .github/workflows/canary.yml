@@ -28,3 +28,24 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: ./scripts/smoke-package.sh
+      - run: npx playwright install --with-deps chromium
+      - run: npm run demo:baseline
+      # The startup check catches a module that moved. This catches the rest:
+      # attachment names, diff colours, the list output ocelli indents against.
+      - name: A real run still prints a diff
+        env:
+          FORCE_COLOR: '1'
+        run: |
+          npm run demo >demo.log 2>&1 || true
+          cat demo.log
+          grep -q 'px different' demo.log
+          grep -q '▀' demo.log
+          grep -q 'snapshots differ · accept with' demo.log
+      - name: A frame that changed size is still named as such
+        env:
+          FORCE_COLOR: '1'
+          DEMO_VIEWPORT_HEIGHT: '300'
+        run: |
+          npm run demo >resized.log 2>&1 || true
+          cat resized.log
+          grep -q 'size differs · expected 480×240, got 480×300' resized.log
