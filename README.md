@@ -100,7 +100,8 @@ switches a single run without touching the config.
 `auto` turns the image off when stdout is not a TTY or `CI` is set. An explicit
 `blocks` or `kitty` overrides that — but colours must be on for any image to be
 drawn, so a pipe also needs `FORCE_COLOR=1` or `PLAYWRIGHT_FORCE_TTY=100x40`.
-Without colours you still get the summary and both destinations as plain text.
+Without colours, or outside a terminal, the summary and both destinations are
+printed as plain text instead of hyperlinks.
 
 `OCELLI_MODE` overrides `mode` for one run. Options are validated at startup: a
 `maxRows` of `0` or `"tall"`, or a misspelled option name, is a configuration

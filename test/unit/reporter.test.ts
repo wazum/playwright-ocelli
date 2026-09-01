@@ -155,6 +155,33 @@ test('without colours the destinations survive as visible text', () => {
   )
 })
 
+test('a coloured pipe keeps the destinations as visible text', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: { ...fakeScreen(written), isTTY: false },
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure({ ...fakeConfig, reporter: [['html']] })
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('price renders', 19, 'test-a')
+  const result = failedWith(FIXTURE)
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  const output = written.join('')
+
+  assert.ok(!output.includes('\x1b]8;;'), 'a pipe has nothing to click')
+  assert.ok(output.includes('test/fixtures/one-digit-diff.png'), 'lost the path')
+  assert.ok(
+    output.includes('playwright-report/index.html#?testId=test-a'),
+    'the report URL vanished instead of being printed',
+  )
+})
+
 function driveFailures(count: number, options: Record<string, unknown> = {}) {
   const written: string[] = []
   const reporter = new Ocelli({

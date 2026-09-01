@@ -152,7 +152,7 @@ export default class Ocelli extends ListReporter {
 
     // A stripped BEL hyperlink collapses to its display text, and the report
     // link's display text is the word "report" - the URL would be gone.
-    if (!this.#hasColours()) {
+    if (!this.#canHyperlink()) {
       const plain = [shown]
 
       if (report !== null) plain.push(line(report))
@@ -169,6 +169,11 @@ export default class Ocelli extends ListReporter {
 
   #hasColours() {
     return this.screen.colors.red('x') !== 'x'
+  }
+
+  // Colours survive a pipe with FORCE_COLOR; OSC 8 needs a terminal.
+  #canHyperlink() {
+    return this.#hasColours() && Boolean(this.screen.isTTY)
   }
 
   #renderMode() {
