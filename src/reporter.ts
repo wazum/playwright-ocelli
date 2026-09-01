@@ -11,7 +11,7 @@ import { format } from './features/diff-summary/format.ts'
 import { frameSizes } from './features/diff-summary/frame-size.ts'
 import { reportLink } from './features/report-link.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
-import type { Options } from './options.ts'
+import type { ResolvedOptions } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
 import { execCommand } from './package-manager.ts'
 import type { DecodedImage } from './playwright-internals.ts'
@@ -34,7 +34,7 @@ const SEPARATOR = line(' · ')
 const BUDGET_SPENT = 'maxImages reached · later diffs are summarised only'
 
 export default class Ocelli extends ListReporter {
-  #options: Options
+  #options: ResolvedOptions
   #configDir: string
   #imagesDrawn = 0
   #budgetAnnounced = false

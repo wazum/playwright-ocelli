@@ -9,22 +9,26 @@ export type Environment = {
 }
 
 export type Options = {
-  mode: Mode
-  maxImages: number
-  maxRows: number
-  cellAspect: number
+  mode?: Mode
+  maxImages?: number
+  maxRows?: number
+  cellAspect?: number
 }
+
+export type ResolvedOptions = Required<Options>
 
 const MODES: Mode[] = ['auto', 'blocks', 'kitty', 'off']
 
-const DEFAULTS: Options = {
+const DEFAULTS: ResolvedOptions = {
   mode: 'auto',
   maxImages: 5,
   maxRows: 16,
   cellAspect: 2.1,
 }
 
-export function resolveOptions(given: Record<string, unknown>): Options {
+export function resolveOptions(
+  given: Record<string, unknown>,
+): ResolvedOptions {
   return {
     mode: asMode(process.env.OCELLI_MODE || given.mode),
     maxImages: asWholeNumber(given.maxImages, 'maxImages', 0),

@@ -12,10 +12,13 @@ const configured: Options = {
   cellAspect: 2.1,
 }
 
+const partial: Options = { maxImages: 3 }
+
 const modes: Mode[] = ['auto', 'blocks', 'kitty', 'off']
 
 test('the entry point exports the option types it accepts', () => {
   assert.equal(configured.mode, 'kitty')
+  assert.equal(partial.maxImages, 3)
   assert.equal(modes.length, 4)
 })
 

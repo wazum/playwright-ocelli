@@ -106,6 +106,14 @@ Without colours you still get the summary and both destinations as plain text.
 startup: a `maxRows` of `0` or `"tall"` is a configuration error, not a silently
 strange picture.
 
+`Options` and `Mode` are exported for config authors who want the names checked:
+
+```ts
+import type { Options } from 'ocelli'
+
+const ocelli: Options = { mode: 'kitty', maxRows: 20 }
+```
+
 ## Known limitations
 
 - **kitty hands downscaling to the terminal.** On a full-page screenshot a small
