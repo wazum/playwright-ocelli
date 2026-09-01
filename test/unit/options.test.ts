@@ -63,6 +63,11 @@ test('an empty OCELLI_MODE leaves the configured mode alone', (t) => {
   assert.equal(resolveOptions({}).mode, 'auto')
 })
 
+test('a misspelled option is rejected instead of quietly doing nothing', () => {
+  assert.throws(() => resolveOptions({ maxImgages: 3 }), /maxImgages/)
+  assert.throws(() => resolveOptions({ maxImgages: 3 }), /maxImages/)
+})
+
 test('a maxRows that cannot size an image is rejected by name', () => {
   assert.throws(() => resolveOptions({ maxRows: 'tall' }), /maxRows/)
   assert.throws(() => resolveOptions({ maxRows: 0 }), /maxRows/)

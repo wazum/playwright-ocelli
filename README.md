@@ -102,9 +102,9 @@ switches a single run without touching the config.
 drawn, so a pipe also needs `FORCE_COLOR=1` or `PLAYWRIGHT_FORCE_TTY=100x40`.
 Without colours you still get the summary and both destinations as plain text.
 
-`OCELLI_MODE` overrides `mode` for one run. Numeric options are validated at
-startup: a `maxRows` of `0` or `"tall"` is a configuration error, not a silently
-strange picture.
+`OCELLI_MODE` overrides `mode` for one run. Options are validated at startup: a
+`maxRows` of `0` or `"tall"`, or a misspelled option name, is a configuration
+error rather than a silently strange picture or a setting that does nothing.
 
 `Options` and `Mode` are exported for config authors who want the names checked:
 

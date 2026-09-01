@@ -19,6 +19,12 @@ export type ResolvedOptions = Required<Options>
 
 const MODES: Mode[] = ['auto', 'blocks', 'kitty', 'off']
 
+const NAMES = ['mode', 'maxImages', 'maxRows', 'cellAspect']
+
+// What Playwright hands every reporter besides the configured options; the
+// private ones it adds are underscore-prefixed.
+const FROM_PLAYWRIGHT = ['configDir', 'screen']
+
 const DEFAULTS: ResolvedOptions = {
   mode: 'auto',
   maxImages: 5,
@@ -29,12 +35,29 @@ const DEFAULTS: ResolvedOptions = {
 export function resolveOptions(
   given: Record<string, unknown>,
 ): ResolvedOptions {
+  rejectUnknownNames(given)
+
   return {
     mode: asMode(process.env.OCELLI_MODE || given.mode),
     maxImages: asWholeNumber(given.maxImages, 'maxImages', 0),
     maxRows: asWholeNumber(given.maxRows, 'maxRows', 1),
     cellAspect: asPositiveNumber(given.cellAspect, 'cellAspect'),
   }
+}
+
+function rejectUnknownNames(given: Record<string, unknown>) {
+  const unknown = Object.keys(given).filter(
+    (name) =>
+      !name.startsWith('_') &&
+      !NAMES.includes(name) &&
+      !FROM_PLAYWRIGHT.includes(name),
+  )
+
+  if (unknown.length === 0) return
+
+  throw new Error(
+    `ocelli: unknown option ${unknown.join(', ')}. Valid options are ${NAMES.join(', ')}.`,
+  )
 }
 
 function asWholeNumber(value: unknown, name: 'maxImages' | 'maxRows', least: number) {
