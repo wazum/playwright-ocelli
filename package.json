@@ -20,6 +20,10 @@
     "type": "git",
     "url": "git+https://github.com/wazum/playwright-ocelli.git"
   },
+  "homepage": "https://github.com/wazum/playwright-ocelli#readme",
+  "bugs": {
+    "url": "https://github.com/wazum/playwright-ocelli/issues"
+  },
   "type": "module",
   "main": "./dist/reporter.js",
   "types": "./dist/reporter.d.ts",
