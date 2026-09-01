@@ -10,6 +10,7 @@ import { analyse } from './features/diff-summary/analyse.ts'
 import { format } from './features/diff-summary/format.ts'
 import { frameSizes } from './features/diff-summary/frame-size.ts'
 import { reportLink } from './features/report-link.ts'
+import { looksKittyCapable } from './kitty-support.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
 import type { ResolvedOptions } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
@@ -34,6 +35,9 @@ const SEPARATOR = line(' · ')
 const BUDGET_SPENT = 'maxImages reached · later diffs are summarised only'
 const REPLACES_LIST =
   'list is configured next to ocelli, which replaces it · every test prints twice'
+const KITTY_AVAILABLE = "this terminal draws real images · try mode: 'kitty'"
+const KITTY_UNCONFIRMED =
+  "mode: 'kitty' · this terminal does not advertise kitty graphics"
 
 export default class Ocelli extends ListReporter {
   #options: ResolvedOptions
@@ -110,7 +114,26 @@ export default class Ocelli extends ListReporter {
 
     if (differing === 0) return
 
-    this.#writeLines([closingLine(differing, result.status === 'passed')], '')
+    const closing = [closingLine(differing, result.status === 'passed')]
+    const hint = this.#kittyHint()
+
+    if (hint !== null) closing.push(hint)
+
+    this.#writeLines(closing, '')
+  }
+
+  // Only a mode nobody chose is worth a nudge; auto never settles on kitty.
+  #kittyHint() {
+    if (this.#imagesDrawn === 0) return null
+
+    const capable = looksKittyCapable(process.env)
+
+    if (this.#options.mode === 'auto' && capable) return line(KITTY_AVAILABLE)
+    if (this.#options.mode === 'kitty' && !capable) {
+      return line(KITTY_UNCONFIRMED)
+    }
+
+    return null
   }
 
   #drawWithinBudget(

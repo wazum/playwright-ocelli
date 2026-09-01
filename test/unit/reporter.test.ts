@@ -8,7 +8,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { test } from 'node:test'
+import { test, type TestContext } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import { PNG } from '#src/playwright-internals'
 import Ocelli from '#src/reporter'
@@ -152,6 +152,72 @@ test('without colours the destinations survive as visible text', () => {
   assert.ok(
     output.includes('playwright-report/index.html#?testId=test-a'),
     'the report URL vanished instead of being printed',
+  )
+})
+
+function usingEnvironment(
+  t: TestContext,
+  values: Record<string, string | undefined>,
+) {
+  const previous = Object.fromEntries(
+    Object.keys(values).map((name) => [name, process.env[name]]),
+  )
+  const apply = (from: Record<string, string | undefined>) => {
+    for (const [name, value] of Object.entries(from)) {
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    }
+  }
+
+  apply(values)
+  t.after(() => apply(previous))
+}
+
+async function driveToEnd(options: Record<string, unknown>) {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    ...options,
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('price renders', 19, 'test-a')
+  const result = failedWith(FIXTURE)
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+  await reporter.onEnd({ status: 'failed' })
+
+  return written.join('')
+}
+
+test('a terminal that draws real images is told they are an option', async (t) => {
+  usingEnvironment(t, { CI: undefined, KITTY_WINDOW_ID: '1' })
+
+  assert.match(await driveToEnd({}), /try mode: 'kitty'/)
+})
+
+test('a mode chosen by hand is left alone', async (t) => {
+  usingEnvironment(t, { CI: undefined, KITTY_WINDOW_ID: '1' })
+
+  assert.doesNotMatch(await driveToEnd({ mode: 'blocks' }), /try mode/)
+})
+
+test('kitty mode in a terminal that says nothing says so', async (t) => {
+  usingEnvironment(t, {
+    CI: undefined,
+    KITTY_WINDOW_ID: undefined,
+    WEZTERM_PANE: undefined,
+    TERM: 'xterm-256color',
+    TERM_PROGRAM: undefined,
+  })
+
+  assert.match(
+    await driveToEnd({ mode: 'kitty' }),
+    /does not advertise kitty graphics/,
   )
 })
 

@@ -89,6 +89,13 @@ reporter: [['ocelli', { mode: 'kitty' }]]
 That needs a terminal implementing the kitty graphics protocol. `OCELLI_MODE=kitty`
 switches a single run without touching the config.
 
+When `mode` is left at `auto` and the environment names a terminal that draws
+them — kitty, ghostty, wezterm — a run that printed block art ends by saying so
+once. Configuring `blocks` yourself turns that off: a mode you chose is a
+decision, not something to nudge. The reverse is reported too, so `mode: 'kitty'`
+in a terminal that never announced itself says as much instead of printing
+nothing visible.
+
 ## Options
 
 | option | default | meaning |
