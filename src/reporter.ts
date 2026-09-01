@@ -5,6 +5,7 @@ import { cropFor, cropped } from './features/diff-image/crop.ts'
 import { fit } from './features/diff-image/fit.ts'
 import { renderBlocks } from './features/diff-image/render-blocks.ts'
 import { renderKitty } from './features/diff-image/render-kitty.ts'
+import type { DiffSummary } from './features/diff-summary/analyse.ts'
 import { analyse } from './features/diff-summary/analyse.ts'
 import { format } from './features/diff-summary/format.ts'
 import { frameSizes } from './features/diff-summary/frame-size.ts'
@@ -74,21 +75,15 @@ export default class Ocelli extends ListReporter {
     this.#snapshotsSeen.add(`${test.id}::${basename(diffPath)}`)
 
     const summary = analyse(image)
-    const sizes =
-      summary.boundingBox === null
-        ? frameSizes(attachments, basename(diffPath))
-        : null
+    const sizes = frameSizes(attachments, basename(diffPath))
 
-    // Nothing red or yellow means there is nothing an image could show. A
-    // size mismatch produces exactly that: the expected frame, faded to grey.
+    // Nothing red or yellow means there is nothing an image could show.
     const region =
       summary.boundingBox === null
         ? null
         : cropFor(summary.boundingBox, image, this.#sizeFor(image))
 
-    this.#writeLines([
-      summaryLine(sizes === null ? format(summary) : describeSizes(sizes), region),
-    ])
+    this.#writeLines([summaryLine(describeChange(summary, sizes), region)])
 
     if (summary.boundingBox !== null) {
       this.#drawWithinBudget(this.#renderMode(), diff, image, region)
@@ -224,6 +219,15 @@ function summaryLine(summary: Line, region: Region | null): Line {
   if (region === null) return summary
 
   return joined([summary, line('cropped to the change')], SEPARATOR)
+}
+
+// On a size mismatch the pixel count is counting the padding Playwright
+// compared against, so it says nothing on its own.
+function describeChange(summary: DiffSummary, sizes: Sizes | null): Line {
+  if (sizes === null) return format(summary)
+  if (summary.boundingBox === null) return describeSizes(sizes)
+
+  return joined([describeSizes(sizes), format(summary)], SEPARATOR)
 }
 
 function describeSizes({ expected, actual }: Sizes): Line {

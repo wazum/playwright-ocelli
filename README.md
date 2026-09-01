@@ -38,6 +38,11 @@ The numbers sit above the image on purpose. Playwright paints real differences
 red and anti-aliasing yellow, and ocelli counts them apart — so the summary stays
 reliable even when downscaling hides a small diff.
 
+Frames of different sizes are named as such first, as in `size differs ·
+expected 480×240, got 480×300 · 136599 px different`. Playwright pads the
+shorter frame before comparing, so the count that follows is largely counting
+that padding.
+
 At the end of a run:
 
 ```

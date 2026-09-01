@@ -371,6 +371,65 @@ test('a size mismatch reports both sizes instead of missing colours', (t) => {
   assert.match(written.join(''), /size differs · expected 400×200, got 300×150/)
 })
 
+test('a size mismatch is named even when the padded band is marked', (t) => {
+  // Playwright pads the shorter frame and compares anyway, so over a dark
+  // page the padded band comes back as marked pixels.
+  const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
+  const named = (suffix: string) => join(directory, `band-${suffix}.png`)
+
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+
+  const width = 400
+  const height = 200
+  const data = Buffer.alloc(width * height * 4, 0xff)
+
+  for (let row = 150; row < height; row++) {
+    for (let column = 0; column < width; column++) {
+      data.set([255, 0, 0, 255], (row * width + column) * 4)
+    }
+  }
+
+  writeFileSync(named('diff'), PNG.sync.write({ width, height, data }))
+  writeFileSync(named('expected'), pngOf(400, 200))
+  writeFileSync(named('actual'), pngOf(400, 150))
+
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+    mode: 'blocks',
+  })
+
+  reporter.onConfigure(fakeConfig)
+  reporter.onBegin(fakeSuite)
+
+  const failing = fakeTest('page grew', 19, 'test-a')
+  const result = {
+    ...failedWith(named('diff')),
+    attachments: [
+      { name: 'band-diff.png', contentType: 'image/png', path: named('diff') },
+      {
+        name: 'band-expected.png',
+        contentType: 'image/png',
+        path: named('expected'),
+      },
+      {
+        name: 'band-actual.png',
+        contentType: 'image/png',
+        path: named('actual'),
+      },
+    ],
+  }
+
+  reporter.onTestBegin(failing, result)
+  reporter.onTestEnd(failing, result)
+
+  const output = written.join('')
+
+  assert.match(output, /size differs · expected 400×200, got 400×150/)
+  assert.match(output, /20000 px different/)
+})
+
 test('an unreadable diff says so instead of failing the whole run', (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'ocelli-'))
   const truncated = join(directory, 'truncated-diff.png')
