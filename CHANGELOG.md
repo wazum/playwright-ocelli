@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A run that printed block art in kitty, ghostty or wezterm ends by naming
+  `mode: 'kitty'` once, and only while `mode` is left at `auto`. A `mode:
+  'kitty'` that no terminal in the environment claims to support is reported
+  the same way, rather than printing nothing visible.
+- `list` configured next to ocelli, which replaces it, is called out at the top
+  of the run instead of quietly printing every test twice.
+
+### Changed
+
+- `Options` describes what a config may pass, so naming one option is enough.
+  It listed all four as required, which meant the documented
+  `{ maxImages: 3, maxRows: 20 }` did not satisfy the type it was checked
+  against.
+- A misspelled option is rejected by name at startup instead of doing nothing.
+  Playwright's own constructor arguments are still accepted.
+
+### Fixed
+
+- A size mismatch is named whenever the frames differ, not only when the diff
+  came back unmarked. Playwright pads the shorter frame and compares anyway, so
+  over a dark page the padding is marked red — those runs reported
+  `20000 px different · 400×50 at 0,150` and never mentioned the size change.
+- An empty `OCELLI_MODE` leaves the configured mode alone instead of failing the
+  run with `unknown mode ""`. A CI expression that resolves to nothing sets the
+  variable to an empty string.
+- The destinations are printed as plain text outside a terminal, not only when
+  colours are off. `FORCE_COLOR=1` in CI used to emit OSC 8 hyperlinks into
+  logs that have nothing to click.
+- A snapshot that differed and then passed on retry is no longer offered for
+  acceptance. A green run said `1 snapshot differs · accept with: … --update-snapshots`,
+  and taking that advice writes the flake into the baseline.
+
 ## [0.2.0] - 2026-08-26
 
 ### Added
