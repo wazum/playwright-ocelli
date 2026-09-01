@@ -26,7 +26,7 @@ const DEFAULTS: Options = {
 
 export function resolveOptions(given: Record<string, unknown>): Options {
   return {
-    mode: asMode(process.env.OCELLI_MODE ?? given.mode),
+    mode: asMode(process.env.OCELLI_MODE || given.mode),
     maxImages: asWholeNumber(given.maxImages, 'maxImages', 0),
     maxRows: asWholeNumber(given.maxRows, 'maxRows', 1),
     cellAspect: asPositiveNumber(given.cellAspect, 'cellAspect'),

@@ -51,6 +51,18 @@ test('OCELLI_MODE overrides the configured mode for one run', (t) => {
   assert.equal(resolveOptions({ mode: 'off' }).mode, 'kitty')
 })
 
+// A CI expression that resolves to nothing sets the variable to an empty
+// string.
+test('an empty OCELLI_MODE leaves the configured mode alone', (t) => {
+  process.env.OCELLI_MODE = ''
+  t.after(() => {
+    delete process.env.OCELLI_MODE
+  })
+
+  assert.equal(resolveOptions({ mode: 'kitty' }).mode, 'kitty')
+  assert.equal(resolveOptions({}).mode, 'auto')
+})
+
 test('a maxRows that cannot size an image is rejected by name', () => {
   assert.throws(() => resolveOptions({ maxRows: 'tall' }), /maxRows/)
   assert.throws(() => resolveOptions({ maxRows: 0 }), /maxRows/)
