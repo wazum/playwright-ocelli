@@ -63,9 +63,12 @@ npm install -D ocelli
 ```js
 // playwright.config.ts
 export default defineConfig({
-  reporter: 'ocelli',
+  reporter: [['ocelli'], ['html', { open: 'never' }]],
 })
 ```
+
+`reporter: 'ocelli'` on its own works too, but the `report` link is printed only
+when the `html` reporter is configured next to it.
 
 With options:
 
