@@ -32,6 +32,8 @@ const INDENT = '       '
 const FALLBACK_COLUMNS = 80
 const SEPARATOR = line(' · ')
 const BUDGET_SPENT = 'maxImages reached · later diffs are summarised only'
+const REPLACES_LIST =
+  'list is configured next to ocelli, which replaces it · every test prints twice'
 
 export default class Ocelli extends ListReporter {
   #options: ResolvedOptions
@@ -45,6 +47,14 @@ export default class Ocelli extends ListReporter {
     verifyScreen(this.screen)
     this.#options = resolveOptions(options)
     this.#configDir = String(options.configDir ?? process.cwd())
+  }
+
+  override onConfigure(config: unknown) {
+    super.onConfigure(config)
+
+    if (!this.config.reporter.some(([name]) => name === 'list')) return
+
+    this.#writeLines([line(REPLACES_LIST)], '')
   }
 
   override onTestEnd(test: TestCase, result: TestResult) {

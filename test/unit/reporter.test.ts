@@ -155,6 +155,33 @@ test('without colours the destinations survive as visible text', () => {
   )
 })
 
+test('a list reporter next to ocelli is called out at once', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+  })
+
+  reporter.onConfigure({ ...fakeConfig, reporter: [['list'], ['ocelli']] })
+
+  assert.match(written.join(''), /list is configured next to ocelli/)
+})
+
+test('the reporters ocelli works beside are not called out', () => {
+  const written: string[] = []
+  const reporter = new Ocelli({
+    screen: fakeScreen(written),
+    configDir: process.cwd(),
+  })
+
+  reporter.onConfigure({
+    ...fakeConfig,
+    reporter: [['ocelli'], ['html'], ['junit']],
+  })
+
+  assert.equal(written.join(''), '')
+})
+
 test('a coloured pipe keeps the destinations as visible text', () => {
   const written: string[] = []
   const reporter = new Ocelli({

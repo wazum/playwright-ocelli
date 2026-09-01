@@ -18,7 +18,8 @@ open the HTML report. ocelli answers it at the moment of failure, so you only
 open the report when it is worth opening.
 
 It replaces the `list` reporter: everything `list` prints, plus the diff image, a
-one-line numeric summary, and a link into the report.
+one-line numeric summary, and a link into the report. Keeping `list` configured
+next to it prints every test twice, and ocelli says so at the top of the run.
 
 ## What it prints
 
