@@ -1,4 +1,4 @@
-type Attachment = { name: string; path?: string }
+import type { Attachment } from './playwright-internals.ts'
 
 export type TestResult = { status: string; attachments: Attachment[] }
 

@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import type { ReporterDescription } from '../playwright-internals.ts'
 
 const DEFAULT_FOLDER = 'playwright-report'
-
-export type ReporterDescription = [string, Record<string, unknown>?]
 
 export function reportLink(
   configDir: string,

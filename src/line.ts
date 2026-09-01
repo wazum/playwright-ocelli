@@ -1,5 +1,7 @@
 import { getEastAsianWidth } from './playwright-internals.ts'
 
+export type Line = { emit: string; visibleWidth: number }
+
 const graphemes = new Intl.Segmenter()
 
 // Controls, plus the format characters that reorder or hide text. Deliberately
@@ -23,19 +25,19 @@ const OSC8 = '\x1b]8;;'
 const BEL = '\x07'
 const ELLIPSIS = '…'
 
-export function line(displayText: string) {
+export function line(displayText: string): Line {
   const emit = displayText.replace(NON_PRINTABLE, '')
 
   return { emit, visibleWidth: measureWidth(emit) }
 }
 
-export function hyperlink(displayText: string, target: string) {
+export function hyperlink(displayText: string, target: string): Line {
   const { emit, visibleWidth } = line(displayText)
 
   return { emit: `${OSC8}${target}${BEL}${emit}${OSC8}${BEL}`, visibleWidth }
 }
 
-export function truncateStart(displayText: string, maxCells: number) {
+export function truncateStart(displayText: string, maxCells: number): Line {
   const measured = line(displayText)
   const { emit, visibleWidth } = measured
 

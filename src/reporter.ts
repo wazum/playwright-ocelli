@@ -11,19 +11,18 @@ import { format } from './features/diff-summary/format.ts'
 import { frameSizes } from './features/diff-summary/frame-size.ts'
 import { reportLink } from './features/report-link.ts'
 import { looksKittyCapable } from './kitty-support.ts'
+import type { Line } from './line.ts'
 import { hyperlink, line, truncateStart } from './line.ts'
 import type { ResolvedOptions } from './options.ts'
 import { resolveMode, resolveOptions } from './options.ts'
 import { execCommand } from './package-manager.ts'
-import type { DecodedImage } from './playwright-internals.ts'
+import type { Attachment, DecodedImage } from './playwright-internals.ts'
 import { ListReporter, PNG, verifyScreen } from './playwright-internals.ts'
 import type { TestResult } from './qualifying-diffs.ts'
 import { qualifyingDiffs } from './qualifying-diffs.ts'
 
 type TestCase = { expectedStatus: string; id: string }
 type RunResult = { status?: string }
-type Attachment = { name: string; path?: string }
-type Line = { emit: string; visibleWidth: number }
 type Sizes = NonNullable<ReturnType<typeof frameSizes>>
 type Region = NonNullable<ReturnType<typeof cropFor>>
 

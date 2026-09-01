@@ -1,6 +1,6 @@
 import { openSync, readSync, closeSync } from 'node:fs'
+import type { Attachment } from '../../playwright-internals.ts'
 
-type Attachment = { name: string; path?: string }
 type Size = { width: number; height: number }
 
 const IHDR_END = 24

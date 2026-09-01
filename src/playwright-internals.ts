@@ -4,6 +4,8 @@ export type DecodedImage = { width: number; height: number; data: Buffer }
 
 export type ReporterDescription = [string, Record<string, unknown>?]
 
+export type Attachment = { name: string; path?: string }
+
 export type TerminalScreen = {
   isTTY: boolean
   ttyWidth: number
